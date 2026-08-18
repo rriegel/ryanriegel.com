@@ -1,0 +1,57 @@
+# See https://help.github.com/articles/ignoring-files for more about ignoring files.
+#
+# Temporary files
+/tmp/
+/log/
+/storage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.sqlite3
+*.sqlite3-*
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key
+/config/credentials/*.key
+
+# Node modules (if any)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+/coverage/
+
+# RSpec
+spec/examples.txt
+
+# Bundler
+.bundle/
+vendor/bundle/
+
+# Yarn
+.pnp.*
+.yarn/install-state.gz
+
+# Precompiled assets
+/public/assets
+
+# Uploaded files
+/public/uploads
+
+# Backup files
+*.bak
+*.backup
