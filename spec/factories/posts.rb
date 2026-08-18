@@ -12,5 +12,10 @@ FactoryBot.define do
       status { :published }
       published_at { Time.current }
     end
+
+    trait :draft do
+      status { :draft }
+      published_at { nil }
+    end
   end
 end
