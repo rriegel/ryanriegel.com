@@ -8,7 +8,7 @@ class Api::PostsController < ApplicationController
     post = Post.published.find_by!(slug: params[:slug])
     render json: post_json(post, full: true)
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Post not found' }, status: :not_found
+    render json: { error: "Post not found" }, status: :not_found
   end
 
   private

@@ -8,7 +8,7 @@ class Api::TagsController < ApplicationController
     tag = Tag.find_by!(slug: params[:slug])
     render json: tag_json(tag, include_posts: true)
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Tag not found' }, status: :not_found
+    render json: { error: "Tag not found" }, status: :not_found
   end
 
   private

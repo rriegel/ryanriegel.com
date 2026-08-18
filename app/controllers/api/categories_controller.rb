@@ -8,7 +8,7 @@ class Api::CategoriesController < ApplicationController
     category = Category.find_by!(slug: params[:slug])
     render json: category_json(category, include_posts: true)
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Category not found' }, status: :not_found
+    render json: { error: "Category not found" }, status: :not_found
   end
 
   private
