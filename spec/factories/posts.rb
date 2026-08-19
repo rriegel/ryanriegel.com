@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :post do
-    title { Faker::Lorem.sentence(word_count: 3) }
+    sequence(:title) { |n| "#{Faker::Lorem.sentence(word_count: 3)}-#{n}" }
     slug { title.parameterize }
     body { Faker::Lorem.paragraph(sentence_count: 5) }
     excerpt { Faker::Lorem.paragraph(sentence_count: 2) }

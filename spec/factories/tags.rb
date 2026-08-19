@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :tag do
-    name { Faker::ProgrammingLanguage.name }
+    sequence(:name) { |n| "#{Faker::ProgrammingLanguage.name}-#{n}" }
     slug { name.parameterize }
   end
 end
