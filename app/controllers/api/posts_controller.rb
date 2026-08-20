@@ -1,16 +1,37 @@
 class Api::PostsController < ApplicationController
   before_action :authenticate_user!, only: [ :create, :update, :destroy ]
+  before_action :set_post, only: [ :show, :update, :destroy ]
 
   def index
-    posts = Post.published.includes(:category, :tags).order(published_at: :desc)
-    render json: posts.map { |post| post_json(post) }
+    posts = Post.published.includes(:category, :tags)
+
+    # Filtering
+    posts = posts.where(category_id: params[:category_id]) if params[:category_id].present?
+    posts = posts.joins(:tags).where(tags: { id: params[:tag_id] }) if params[:tag_id].present?
+    posts = posts.where("published_at >= ?", params[:start_date]) if params[:start_date].present?
+    posts = posts.where("published_at <= ?", params[:end_date]) if params[:end_date].present?
+
+    # Pagination
+    page = [ params[:page].to_i, 1 ].max
+    per_page = [ [ params[:per_page ].to_i, 1 ].max, 100 ].min
+    offset = (page - 1) * per_page
+
+    total = posts.count
+    posts = posts.order(published_at: :desc).offset(offset).limit(per_page)
+
+    render json: {
+      posts: posts.map { |post| post_json(post) },
+      meta: {
+        current_page: page,
+        per_page: per_page,
+        total_entries: total,
+        total_pages: (total.to_f / per_page).ceil
+      }
+    }
   end
 
   def show
-    post = Post.published.find_by!(slug: params[:slug])
-    render json: post_json(post, full: true)
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "Post not found" }, status: :not_found
+    render json: post_json(@post, full: true)
   end
 
   def create
@@ -23,25 +44,25 @@ class Api::PostsController < ApplicationController
   end
 
   def update
-    post = Post.find_by!(slug: params[:slug])
-    if post.update(post_params)
-      render json: post_json(post, full: true)
+    if @post.update(post_params)
+      render json: post_json(@post, full: true)
     else
-      render json: { errors: post.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @post.errors.full_messages }, status: :unprocessable_entity
     end
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "Post not found" }, status: :not_found
   end
 
   def destroy
-    post = Post.find_by!(slug: params[:slug])
-    post.destroy
+    @post.destroy
     head :no_content
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "Post not found" }, status: :not_found
   end
 
   private
+
+  def set_post
+    @post = Post.find_by!(slug: params[:slug])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Post not found" }, status: :not_found
+  end
 
   def post_params
     params.require(:post).permit(:title, :body, :status, :category_id, :published_at, tag_ids: [])
