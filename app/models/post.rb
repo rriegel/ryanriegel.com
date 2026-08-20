@@ -19,6 +19,16 @@ class Post < ApplicationRecord
   private
 
   def generate_slug
-    self.slug ||= title&.parameterize
+    return if self.slug.present?
+    base_slug = title&.parameterize
+    return unless base_slug.present?
+
+    candidate = base_slug
+    counter = 1
+    while Post.exists?(slug: candidate)
+      candidate = "#{base_slug}-#{counter}"
+      counter += 1
+    end
+    self.slug = candidate
   end
 end
