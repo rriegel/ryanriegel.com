@@ -49,6 +49,8 @@ class Api::PostsController < ApplicationController
     else
       render json: { errors: @post.errors.full_messages }, status: :unprocessable_entity
     end
+  rescue ActiveRecord::StaleObjectError
+    render json: { error: "This post has been modified by someone else. Please reload and try again." }, status: :conflict
   end
 
   def destroy
@@ -77,6 +79,7 @@ class Api::PostsController < ApplicationController
       body: full ? post.body : nil,
       status: post.status,
       published_at: post.published_at,
+      lock_version: post.lock_version,
       category: post.category ? { name: post.category.name, slug: post.category.slug } : nil,
       tags: post.tags.map { |tag| { name: tag.name, slug: tag.slug } }
     }
