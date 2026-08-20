@@ -9,6 +9,7 @@ A custom-built blog platform for publishing media, articles, tutorials, and thou
 ## Tech Stack
 
 - **Backend**: Ruby on Rails 8.1.3 (API mode)
+- **Frontend**: Astro (server-side rendering)
 - **Database**: PostgreSQL 16 (via Docker)
 - **Testing**: RSpec with FactoryBot
 - **Deployment**: AWS (planned)
@@ -16,6 +17,7 @@ A custom-built blog platform for publishing media, articles, tutorials, and thou
 ## Prerequisites
 
 - Ruby 3.4.1 (managed via rbenv)
+- Node.js 22+ and npm
 - Docker (for PostgreSQL)
 - Bundler
 
@@ -66,6 +68,17 @@ rails server
 
 The API will be available at `http://localhost:3000`.
 
+### 6. Set up the frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+The frontend will be available at `http://localhost:4321`.
+
 ## Daily Development (Already Set Up)
 
 Once the project is set up, here's what starting and stopping looks like day-to-day:
@@ -76,15 +89,20 @@ Once the project is set up, here's what starting and stopping looks like day-to-
 # 1. Start the database
 docker start ryanriegel-com-db
 
-# 2. Start the Rails server
+# 2. Start the Rails server (in one terminal)
 cd ~/work/ryanriegel.com
 rails server
+
+# 3. Start the Astro dev server (in another terminal)
+cd ~/work/ryanriegel.com/frontend
+npm run dev
 ```
 
 ### Stopping work
 
 ```bash
 # Stop the Rails server (Ctrl+C in the terminal where it's running)
+# Stop the Astro dev server (Ctrl+C in the terminal where it's running)
 
 # Stop the database (optional — leave it running if you'll be back soon)
 docker stop ryanriegel-com-db
@@ -143,9 +161,23 @@ config/
   database.yml  # PostgreSQL configuration
 db/
   migrate/      # Database migrations
+frontend/
+  src/
+    layouts/    # Astro layouts (base HTML structure)
+    pages/      # Astro pages (routes)
+      index.astro      # Homepage
+      about.astro      # About page
+      404.astro        # 404 page
+      blog/
+        index.astro    # Blog listing
+        [slug].astro   # Individual post
+    lib/
+      api.ts           # API client (typed fetch functions)
+    components/        # Reusable Astro components
 spec/
   factories/    # FactoryBot definitions
   models/       # Model specs
+  requests/     # API request specs
 ```
 
 ## Database Schema

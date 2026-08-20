@@ -1,0 +1,90 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getPosts, type Post } from '../lib/api';
+
+let posts: Post[] = [];
+let error: string | null = null;
+
+try {
+  posts = await getPosts();
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Failed to load posts';
+}
+---
+
+<Layout title="Ryan Riegel">
+  <h1>Ryan Riegel</h1>
+  <p>Software engineer, writer, and builder.</p>
+  
+  <section>
+    <h2>Recent Posts</h2>
+
+    {error && (
+      <p class="error">⚠️ {error}</p>
+    )}
+
+    {posts.length === 0 && !error && (
+      <p>No posts yet. Check back soon!</p>
+    )}
+
+    <ul class="post-list">
+      {posts.slice(0, 5).map((post) => (
+        <li>
+          <a href={`/blog/${post.slug}`}>{post.title}</a>
+          {post.published_at && (
+            <time datetime={post.published_at}>
+              {new Date(post.published_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })}
+            </time>
+          )}
+        </li>
+      ))}
+    </ul>
+
+    {posts.length > 0 && (
+      <p><a href="/blog">View all posts →</a></p>
+    )}
+  </section>
+</Layout>
+
+<style>
+  section {
+    margin-top: 2rem;
+  }
+
+  .post-list {
+    list-style: none;
+    margin-top: 1rem;
+  }
+
+  .post-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .post-list li:last-child {
+    border-bottom: none;
+  }
+
+  .post-list a {
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .post-list time {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    margin-left: 1rem;
+  }
+
+  .error {
+    color: #cc0000;
+    font-size: 0.875rem;
+  }
+</style>

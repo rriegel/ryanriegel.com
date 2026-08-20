@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getPost, type Post } from '../../lib/api';
+
+const { slug } = Astro.params;
+
+let post: Post | null = null;
+let error: string | null = null;
+
+try {
+  post = await getPost(slug as string);
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Failed to load post';
+}
+---
+
+<Layout title={post ? `${post.title} - Ryan Riegel` : 'Post Not Found'}>
+  {error && (
+    <div class="error">
+      <h1>Post Not Found</h1>
+      <p>{error}</p>
+      <p><a href="/blog">← Back to blog</a></p>
+    </div>
+  )}
+
+  {post && (
+    <article class="post">
+      <header>
+        <h1>{post.title}</h1>
+        <div class="meta">
+          {post.published_at && (
+            <time datetime={post.published_at}>
+              {new Date(post.published_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </time>
+          )}
+          {post.category && (
+            <span class="category">in {post.category.name}</span>
+          )}
+        </div>
+        {post.tags.length > 0 && (
+          <div class="tags">
+            {post.tags.map((tag) => (
+              <span class="tag">{tag.name}</span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <div class="content" set:html={post.body} />
+
+      <footer>
+        <a href="/blog">← Back to blog</a>
+      </footer>
+    </article>
+  )}
+</Layout>
+
+<style>
+  .post header {
+    margin-bottom: 2rem;
+  }
+
+  .post h1 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    background: #f0f0f0;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    color: var(--color-text-muted);
+  }
+
+  .content {
+    line-height: 1.8;
+  }
+
+  .content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 1.5rem 0;
+  }
+
+  .content :global(blockquote) {
+    border-left: 3px solid var(--color-border);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  .content :global(ul),
+  .content :global(ol) {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .error {
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .error h1 {
+    color: var(--color-text-muted);
+  }
+</style>
