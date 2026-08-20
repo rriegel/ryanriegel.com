@@ -2,6 +2,7 @@ class ApplicationController < ActionController::API
   include Devise::Controllers::Helpers
   include ActionController::MimeResponds
   before_action :configure_permitted_parameters, if: :devise_controller?
+  before_action :validate_content_type, only: [ :post, :put, :patch ]
 
   protected
 
@@ -25,6 +26,14 @@ class ApplicationController < ActionController::API
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [ :email, :password, :password_confirmation ])
     devise_parameter_sanitizer.permit(:sign_in, keys: [ :email, :password ])
+  end
+
+  def validate_content_type
+    content_type = request.content_type
+    return if content_type.blank?
+    return if content_type.include?("application/json")
+
+    render json: { error: "Content-Type must be application/json" }, status: :unsupported_media_type
   end
 
   private
