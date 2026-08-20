@@ -20,6 +20,7 @@ RSpec.describe "Api::Tags", type: :request do
     it "includes published posts count" do
       get "/api/tags"
 
+      puts "Response body: #{response.body}"
       json = JSON.parse(response.body)
       ruby_tag = json.find { |t| t["name"] == "Ruby" }
 

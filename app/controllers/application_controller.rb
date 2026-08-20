@@ -2,7 +2,7 @@ class ApplicationController < ActionController::API
   include Devise::Controllers::Helpers
   include ActionController::MimeResponds
   before_action :configure_permitted_parameters, if: :devise_controller?
-  before_action :validate_content_type, only: [ :post, :put, :patch ]
+  before_action :validate_content_type, if: -> { request.post? || request.put? || request.patch? }
 
   protected
 

@@ -1,6 +1,7 @@
 class Api::PostsController < ApplicationController
   before_action :authenticate_user!, only: [ :create, :update, :destroy ]
-  before_action :set_post, only: [ :show, :update, :destroy ]
+  before_action :set_post, only: [ :update, :destroy ]
+  before_action :set_published_post, only: [ :show ]
 
   def index
     posts = Post.published.includes(:category, :tags)
@@ -13,14 +14,14 @@ class Api::PostsController < ApplicationController
 
     # Pagination
     page = [ params[:page].to_i, 1 ].max
-    per_page = [ [ params[:per_page ].to_i, 1 ].max, 100 ].min
+    per_page = [ [ params[:per_page ].to_i, 20 ].max, 100 ].min
     offset = (page - 1) * per_page
 
     total = posts.count
     posts = posts.order(published_at: :desc).offset(offset).limit(per_page)
 
     render json: {
-      posts: posts.map { |post| post_json(post) },
+      data: posts.map { |post| post_json(post) },
       meta: {
         current_page: page,
         per_page: per_page,
@@ -62,6 +63,12 @@ class Api::PostsController < ApplicationController
 
   def set_post
     @post = Post.find_by!(slug: params[:slug])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Post not found" }, status: :not_found
+  end
+
+  def set_published_post
+    @post = Post.published.find_by!(slug: params[:slug])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Post not found" }, status: :not_found
   end
