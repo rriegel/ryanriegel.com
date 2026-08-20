@@ -79,6 +79,26 @@ npm run dev
 
 The frontend will be available at `http://localhost:4321`.
 
+## Frontend Commands
+
+All frontend commands must be run from the `frontend/` directory:
+
+```bash
+cd frontend
+
+# Development server (hot reload)
+npm run dev
+
+# Production build
+npm run build
+
+# Preview production build locally
+npm run preview
+
+# Type checking
+npm run check
+```
+
 ## Daily Development (Already Set Up)
 
 Once the project is set up, here's what starting and stopping looks like day-to-day:
