@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404 - Page Not Found">
+  <div class="not-found">
+    <h1>404</h1>
+    <p>Page not found.</p>
+    <a href="/">← Go home</a>
+  </div>
+</Layout>
+
+<style>
+  .not-found {
+    text-align: center;
+    padding: 4rem 0;
+  }
+
+  .not-found h1 {
+    font-size: 4rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+</style>
