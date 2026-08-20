@@ -4,7 +4,7 @@ Personal website and blog built with Rails 8.1 API + PostgreSQL.
 
 ## Purpose
 
-A custom-built blog platform for publishing technical articles, tutorials, and thoughts. Built from scratch to learn Rails and have full control over the content management system.
+A custom-built blog platform for publishing media, articles, tutorials, and thoughts. Built from scratch to bring my Rails experience to my personal projects and have full control over the content management system.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ A custom-built blog platform for publishing technical articles, tutorials, and t
 - Docker (for PostgreSQL)
 - Bundler
 
-## Local Development Setup
+## Local Development Setup (First Time)
 
 ### 1. Start PostgreSQL via Docker
 
@@ -28,9 +28,12 @@ docker run -d \
   --name ryanriegel-com-db \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=*** \
-  -p 5433:5432 \
+  -e POSTGRES_DB=ryanriegel_com_development \
+  -p 5434:5432 \
   postgres:16-alpine
 ```
+
+Note: Port 5434 is used to avoid conflicts with other projects
 
 ### 2. Set up environment variables
 
@@ -63,7 +66,60 @@ rails server
 
 The API will be available at `http://localhost:3000`.
 
+## Daily Development (Already Set Up)
+
+Once the project is set up, here's what starting and stopping looks like day-to-day:
+
+### Starting work
+
+```bash
+# 1. Start the database
+docker start ryanriegel-com-db
+
+# 2. Start the Rails server
+cd ~/work/ryanriegel.com
+rails server
+```
+
+### Stopping work
+
+```bash
+# Stop the Rails server (Ctrl+C in the terminal where it's running)
+
+# Stop the database (optional — leave it running if you'll be back soon)
+docker stop ryanriegel-com-db
+```
+
+### Useful Docker commands
+
+```bash
+# Check if the database is running
+docker ps | grep ryanriegel-com-db
+
+# View database logs
+docker logs ryanriegel-com-db
+
+# Connect to the database directly
+PGPASSWORD=*** psql -h 127.0.0.1 -p 5434 -U postgres -d ryanriegel_com_development
+```
+
+### If the database password stops working
+
+The password is only set on first container creation. If it drifts, reset it:
+
+```bash
+docker exec -it ryanriegel-com-db psql -U postgres -c "ALTER USER postgres PASSWORD 'postgres';"
+```
+
 ## Running Tests
+
+Before running tests for the first time, create and migrate the test database:
+
+```bash
+RAILS_ENV=test bin/rails db:create db:migrate
+```
+
+Then run the test suite:
 
 ```bash
 bundle exec rspec
@@ -118,6 +174,6 @@ Deployment configuration is planned for AWS with:
 
 ## Notes
 
-- Database runs on port 5433 (not default 5432) to avoid conflicts
+- Database runs on port 5434 (not default 5432) to avoid conflicts with other projects
 - All secrets are managed via environment variables
 - The project uses PostgreSQL exclusively (no SQLite)
