@@ -1,7 +1,7 @@
 class Api::RegistrationsController < ApplicationController
   def create
     user = User.new(registration_params)
-    
+
     if user.save
       token = generate_jwt(user)
       response.set_header("Authorization", "Bearer #{token}")

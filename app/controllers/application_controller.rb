@@ -13,12 +13,11 @@ class ApplicationController < ActionController::API
         @current_user = User.find_by(id: decoded[:user_id])
       end
     end
-    
+
     unless @current_user
       render json: { error: "Not authenticated" }, status: :unauthorized
     end
   end
-
   def current_user
     @current_user
   end

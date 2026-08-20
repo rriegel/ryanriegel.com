@@ -3,7 +3,7 @@ class Api::SessionsController < ApplicationController
 
   def create
     user = User.find_by(email: params.dig(:user, :email))
-    
+
     if user&.valid_password?(params.dig(:user, :password))
       token = generate_jwt(user)
       response.set_header("Authorization", "Bearer #{token}")
