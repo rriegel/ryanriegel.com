@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "API::Posts Write Operations", type: :request do
   let(:user) { create(:user) }
   let(:auth_headers) do
-    post "/api/login", params: { user: { email: user.email, password: "password123" } }
+    post "/api/login", params: { user: { email: user.email, password: "password123" } }, as: :json
     { "Authorization" => response.headers["Authorization"] }
   end
 
@@ -19,7 +19,7 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
 
     it "creates a post when authenticated" do
-      post "/api/posts", params: valid_params, headers: auth_headers
+      post "/api/posts", params: valid_params, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to eq("New Post")
@@ -27,13 +27,13 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
 
     it "returns 401 when not authenticated" do
-      post "/api/posts", params: valid_params
+      post "/api/posts", params: valid_params, as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns errors for invalid post" do
-      post "/api/posts", params: { post: { title: "", body: "" } }, headers: auth_headers
+      post "/api/posts", params: { post: { title: "", body: "" } }, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body["errors"]).to be_present
@@ -46,14 +46,15 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     it "updates a post when authenticated" do
       patch "/api/posts/original-title",
             params: { post: { title: "Updated Title" } },
-            headers: auth_headers
+            headers: auth_headers,
+            as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["title"]).to eq("Updated Title")
     end
 
     it "returns 401 when not authenticated" do
-      patch "/api/posts/original-title", params: { post: { title: "Updated" } }
+      patch "/api/posts/original-title", params: { post: { title: "Updated" } }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -63,14 +64,14 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     let!(:post_record) { create(:post, title: "To Delete", slug: "to-delete") }
 
     it "deletes a post when authenticated" do
-      delete "/api/posts/to-delete", headers: auth_headers
+      delete "/api/posts/to-delete", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:no_content)
       expect(Post.find_by(slug: "to-delete")).to be_nil
     end
 
     it "returns 401 when not authenticated" do
-      delete "/api/posts/to-delete"
+      delete "/api/posts/to-delete", as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end

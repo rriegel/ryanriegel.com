@@ -41,5 +41,7 @@ class Rack::Attack
   end
 end
 
-# Enable Rack::Attack in all environments
-Rails.application.config.middleware.use Rack::Attack
+# Enable Rack::Attack in non-test environments
+unless Rails.env.test?
+  Rails.application.config.middleware.use Rack::Attack
+end

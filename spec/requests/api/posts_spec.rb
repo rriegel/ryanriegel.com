@@ -16,15 +16,15 @@ RSpec.describe "Api::Posts", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
 
-      expect(json.length).to eq(1)
-      expect(json.first["title"]).to eq("Published Post")
+      expect(json["data"].length).to eq(1)
+      expect(json["data"].first["title"]).to eq("Published Post")
     end
 
     it "includes category and tags" do
       get "/api/posts"
 
       json = JSON.parse(response.body)
-      post = json.first
+      post = json["data"].first
 
       expect(post["category"]).to eq({ "name" => "Technology", "slug" => "technology" })
       expect(post["tags"].length).to eq(2)
@@ -35,7 +35,17 @@ RSpec.describe "Api::Posts", type: :request do
       get "/api/posts"
 
       json = JSON.parse(response.body)
-      expect(json.first["body"]).to be_nil
+      expect(json["data"].first["body"]).to be_nil
+    end
+
+    it "includes pagination metadata" do
+      get "/api/posts"
+
+      json = JSON.parse(response.body)
+      expect(json["meta"]).to be_present
+      expect(json["meta"]["current_page"]).to eq(1)
+      expect(json["meta"]["per_page"]).to eq(20)
+      expect(json["meta"]["total_entries"]).to eq(1)
     end
   end
 

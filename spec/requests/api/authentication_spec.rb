@@ -15,7 +15,7 @@ RSpec.describe "Authentication", type: :request do
     end
 
     it "creates a new user and returns JWT token" do
-      post "/api/register", params: valid_params
+      post "/api/register", params: valid_params, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.headers["Authorization"]).to be_present
@@ -23,7 +23,7 @@ RSpec.describe "Authentication", type: :request do
     end
 
     it "returns errors for invalid registration" do
-      post "/api/register", params: { user: { email: "", password: "x", password_confirmation: "y" } }
+      post "/api/register", params: { user: { email: "", password: "x", password_confirmation: "y" } }, as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body["status"]["code"]).to eq(422)
@@ -35,7 +35,7 @@ RSpec.describe "Authentication", type: :request do
     before { user }
 
     it "returns JWT token for valid credentials" do
-      post "/api/login", params: { user: { email: user.email, password: "password123" } }
+      post "/api/login", params: { user: { email: user.email, password: "password123" } }, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.headers["Authorization"]).to be_present
@@ -43,7 +43,7 @@ RSpec.describe "Authentication", type: :request do
     end
 
     it "returns 401 for invalid credentials" do
-      post "/api/login", params: { user: { email: user.email, password: "wrong" } }
+      post "/api/login", params: { user: { email: user.email, password: "wrong" } }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
       expect(response.parsed_body["status"]["code"]).to eq(401)
@@ -52,12 +52,12 @@ RSpec.describe "Authentication", type: :request do
 
   describe "DELETE /api/logout" do
     let(:auth_headers) do
-      post "/api/login", params: { user: { email: user.email, password: "password123" } }
+      post "/api/login", params: { user: { email: user.email, password: "password123" } }, as: :json
       { "Authorization" => response.headers["Authorization"] }
     end
 
     it "logs out successfully" do
-      delete "/api/logout", headers: auth_headers
+      delete "/api/logout", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]["message"]).to eq("Logged out successfully.")

@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "API::Categories Write Operations", type: :request do
   let(:user) { create(:user) }
   let(:auth_headers) do
-    post "/api/login", params: { user: { email: user.email, password: "password123" } }
+    post "/api/login", params: { user: { email: user.email, password: "password123" } }, as: :json
     { "Authorization" => response.headers["Authorization"] }
   end
 
@@ -18,7 +18,7 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     end
 
     it "creates a category when authenticated" do
-      post "/api/categories", params: valid_params, headers: auth_headers
+      post "/api/categories", params: valid_params, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["name"]).to eq("Technology")
@@ -26,7 +26,7 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     end
 
     it "returns 401 when not authenticated" do
-      post "/api/categories", params: valid_params
+      post "/api/categories", params: valid_params, as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -38,14 +38,15 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     it "updates a category when authenticated" do
       patch "/api/categories/old-name",
             params: { category: { name: "New Name" } },
-            headers: auth_headers
+            headers: auth_headers,
+            as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["name"]).to eq("New Name")
     end
 
     it "returns 401 when not authenticated" do
-      patch "/api/categories/old-name", params: { category: { name: "New" } }
+      patch "/api/categories/old-name", params: { category: { name: "New" } }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -55,14 +56,14 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     let!(:category) { create(:category, name: "To Delete", slug: "to-delete") }
 
     it "deletes a category when authenticated" do
-      delete "/api/categories/to-delete", headers: auth_headers
+      delete "/api/categories/to-delete", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:no_content)
       expect(Category.find_by(slug: "to-delete")).to be_nil
     end
 
     it "returns 401 when not authenticated" do
-      delete "/api/categories/to-delete"
+      delete "/api/categories/to-delete", as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
