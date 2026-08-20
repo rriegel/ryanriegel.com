@@ -2,13 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import { getPost, type Post } from '../../lib/api';
 
-export async function getStaticPaths() {
-  // In server mode, we don't need static paths
-  // This is a placeholder for potential SSG in the future
-  return [];
-}
-
-// For server-side rendering, use Astro.params
 const { slug } = Astro.params;
 
 let post: Post | null = null;
