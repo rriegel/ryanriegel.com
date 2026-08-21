@@ -14,7 +14,7 @@ class Api::V1::PostsController < ApplicationController
 
     # Pagination
     page = [ params[:page].to_i, 1 ].max
-    per_page = [ [ params[:per_page ].to_i, 20 ].max, 100 ].min
+    per_page = [ [ params[:per_page].to_i, 20 ].max, 100 ].min
     offset = (page - 1) * per_page
 
     total = posts.count
