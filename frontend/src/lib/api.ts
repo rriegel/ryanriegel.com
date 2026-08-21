@@ -33,7 +33,8 @@ async function fetchApi<T>(path: string): Promise<T> {
 }
 
 export async function getPosts(): Promise<Post[]> {
-  return fetchApi<Post[]>('/api/posts');
+  const response = await fetchApi<{ data: Post[] }>('/api/posts');
+  return response.data;
 }
 
 export async function getPost(slug: string): Promise<Post> {
