@@ -21,6 +21,19 @@ A custom-built blog platform for publishing media, articles, tutorials, and thou
 - Docker (for PostgreSQL)
 - Bundler
 
+## Quick Start
+
+Use the Makefile for unified start/stop commands:
+
+```bash
+make dev        # Start everything (DB + Rails + Astro)
+make stop       # Stop all services
+make status     # Check what's running
+make test       # Run test suite
+```
+
+Run `make help` for all available commands.
+
 ## Local Development Setup (First Time)
 
 ### 1. Start PostgreSQL via Docker
@@ -101,31 +114,47 @@ npm run check
 
 ## Daily Development (Already Set Up)
 
-Once the project is set up, here's what starting and stopping looks like day-to-day:
-
-### Starting work
+Use the Makefile for unified start/stop:
 
 ```bash
-# 1. Start the database
-docker start ryanriegel-com-db
-
-# 2. Start the Rails server (in one terminal)
-cd ~/work/ryanriegel.com
-rails server
-
-# 3. Start the Astro dev server (in another terminal)
-cd ~/work/ryanriegel.com/frontend
-npm run dev
+make dev        # Start everything
+make stop       # Stop everything
+make status     # Check what's running
 ```
 
-### Stopping work
+### Manual Start/Stop (if needed)
+
+If you prefer to start services individually:
 
 ```bash
-# Stop the Rails server (Ctrl+C in the terminal where it's running)
-# Stop the Astro dev server (Ctrl+C in the terminal where it's running)
+# Start database only
+make db
 
-# Stop the database (optional — leave it running if you'll be back soon)
-docker stop ryanriegel-com-db
+# Start Rails only
+make backend
+
+# Start Astro only
+make frontend
+```
+
+### Stopping Services
+
+Instead of manually hunting down processes with `lsof`, use:
+
+```bash
+make stop       # Stops Rails, Astro, and database
+make status     # Verify everything is shut down
+```
+
+If services are still lingering:
+
+```bash
+# Force kill by port
+lsof -ti :3000 | xargs kill -9
+lsof -ti :4321 | xargs kill -9
+
+# Or use the clean target
+make clean      # Stops services and removes containers
 ```
 
 ### Useful Docker commands

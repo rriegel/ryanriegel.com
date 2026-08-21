@@ -330,7 +330,7 @@ Devise.setup do |config|
   config.jwt do |jwt|
     jwt.secret = ENV["JWT_SECRET_KEY"]
     jwt.dispatch_requests = [
-      [ "POST", %r{^/api/login$} ]
+      [ "POST", %r{^/api/v1/login$} ]
     ]
     jwt.expiration_time = 1.day.to_i
   end

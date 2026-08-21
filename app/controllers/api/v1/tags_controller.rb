@@ -1,4 +1,4 @@
-class Api::TagsController < ApplicationController
+class Api::V1::TagsController < ApplicationController
   before_action :authenticate_user!, only: [ :create, :update, :destroy ]
 
   def index

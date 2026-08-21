@@ -9,22 +9,22 @@ RSpec.describe "Api::Posts", type: :request do
   end
   let!(:draft_post) { create(:post, :draft, title: "Draft Post") }
 
-  describe "GET /api/posts" do
+  describe "GET /api/v1/posts" do
     it "returns only published posts" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
 
-      expect(json.length).to eq(1)
-      expect(json.first["title"]).to eq("Published Post")
+      expect(json["data"].length).to eq(1)
+      expect(json["data"].first["title"]).to eq("Published Post")
     end
 
     it "includes category and tags" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       json = JSON.parse(response.body)
-      post = json.first
+      post = json["data"].first
 
       expect(post["category"]).to eq({ "name" => "Technology", "slug" => "technology" })
       expect(post["tags"].length).to eq(2)
@@ -32,16 +32,26 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "does not include body in index" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       json = JSON.parse(response.body)
-      expect(json.first["body"]).to be_nil
+      expect(json["data"].first["body"]).to be_nil
+    end
+
+    it "includes pagination metadata" do
+      get "/api/v1/posts"
+
+      json = JSON.parse(response.body)
+      expect(json["meta"]).to be_present
+      expect(json["meta"]["current_page"]).to eq(1)
+      expect(json["meta"]["per_page"]).to eq(20)
+      expect(json["meta"]["total_entries"]).to eq(1)
     end
   end
 
-  describe "GET /api/posts/:slug" do
+  describe "GET /api/v1/posts/:slug" do
     it "returns the post with body" do
-      get "/api/posts/#{published_post.slug}"
+      get "/api/v1/posts/#{published_post.slug}"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -51,7 +61,7 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "returns 404 for non-existent post" do
-      get "/api/posts/non-existent-slug"
+      get "/api/v1/posts/non-existent-slug"
 
       expect(response).to have_http_status(:not_found)
       json = JSON.parse(response.body)
@@ -59,7 +69,7 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "returns 404 for draft posts" do
-      get "/api/posts/#{draft_post.slug}"
+      get "/api/v1/posts/#{draft_post.slug}"
 
       expect(response).to have_http_status(:not_found)
     end

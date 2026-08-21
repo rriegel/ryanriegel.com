@@ -28,5 +28,8 @@ module RyanriegelCom
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Limit request body size to 1MB to prevent DoS attacks
+    config.action_dispatch.max_request_size = 1.megabyte
   end
 end

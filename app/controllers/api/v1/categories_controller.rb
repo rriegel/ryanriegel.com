@@ -1,4 +1,4 @@
-class Api::CategoriesController < ApplicationController
+class Api::V1::CategoriesController < ApplicationController
   before_action :authenticate_user!, only: [ :create, :update, :destroy ]
 
   def index

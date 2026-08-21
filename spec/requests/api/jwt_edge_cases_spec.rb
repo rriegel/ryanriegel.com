@@ -17,17 +17,19 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
     end
 
     it "returns 401 for expired token on protected endpoint" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{expired_token}" }
+           headers: { "Authorization" => "Bearer #{expired_token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 401 for expired token on write operation" do
-      put "/api/posts/test-slug",
+      put "/api/v1/posts/test-slug",
           params: { post: { title: "Updated" } },
-          headers: { "Authorization" => "Bearer #{expired_token}" }
+          headers: { "Authorization" => "Bearer #{expired_token}" },
+          as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -35,33 +37,37 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
 
   describe "malformed Authorization header" do
     it "returns 401 when header has no Bearer prefix" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => valid_token }
+           headers: { "Authorization" => valid_token },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 401 when header is empty string" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "" }
+           headers: { "Authorization" => "" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 401 when header has invalid format" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "InvalidFormat" }
+           headers: { "Authorization" => "InvalidFormat" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 401 when token is garbage" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer not.a.valid.jwt.token" }
+           headers: { "Authorization" => "Bearer not.a.valid.jwt.token" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -71,9 +77,10 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
       wrong_secret = "wrong_secret_key"
       tampered_token = JWT.encode(payload, wrong_secret, "HS256")
 
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{tampered_token}" }
+           headers: { "Authorization" => "Bearer #{tampered_token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -89,17 +96,19 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
     end
 
     it "returns 401 when user no longer exists" do
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{deleted_user_token}" }
+           headers: { "Authorization" => "Bearer #{deleted_user_token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
 
     it "returns 401 for write operation when user no longer exists" do
-      put "/api/posts/test-slug",
+      put "/api/v1/posts/test-slug",
           params: { post: { title: "Updated" } },
-          headers: { "Authorization" => "Bearer #{deleted_user_token}" }
+          headers: { "Authorization" => "Bearer #{deleted_user_token}" },
+          as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -110,9 +119,10 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
       payload = { iat: Time.current.to_i, exp: 24.hours.from_now.to_i }
       token = JWT.encode(payload, jwt_secret, "HS256")
 
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{token}" }
+           headers: { "Authorization" => "Bearer #{token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -121,9 +131,10 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
       payload = { sub: 999_999, iat: Time.current.to_i, exp: 24.hours.from_now.to_i }
       token = JWT.encode(payload, jwt_secret, "HS256")
 
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{token}" }
+           headers: { "Authorization" => "Bearer #{token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -132,29 +143,30 @@ RSpec.describe "JWT Authentication Edge Cases", type: :request do
       payload = { sub: nil, iat: Time.current.to_i, exp: 24.hours.from_now.to_i }
       token = JWT.encode(payload, jwt_secret, "HS256")
 
-      post "/api/posts",
+      post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body", status: "draft" } },
-           headers: { "Authorization" => "Bearer #{token}" }
+           headers: { "Authorization" => "Bearer #{token}" },
+           as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
   end
 
   describe "public endpoints remain accessible" do
-    it "allows GET /api/posts without authentication" do
-      get "/api/posts"
+    it "allows GET /api/v1/posts without authentication" do
+      get "/api/v1/posts"
 
       expect(response).to have_http_status(:ok)
     end
 
-    it "allows GET /api/categories without authentication" do
-      get "/api/categories"
+    it "allows GET /api/v1/categories without authentication" do
+      get "/api/v1/categories"
 
       expect(response).to have_http_status(:ok)
     end
 
-    it "allows GET /api/tags without authentication" do
-      get "/api/tags"
+    it "allows GET /api/v1/tags without authentication" do
+      get "/api/v1/tags"
 
       expect(response).to have_http_status(:ok)
     end
