@@ -6,9 +6,9 @@ RSpec.describe "Api::Categories", type: :request do
   let!(:published_post) { create(:post, :published, category: category1) }
   let!(:draft_post) { create(:post, :draft, category: category1) }
 
-  describe "GET /api/categories" do
+  describe "GET /api/v1/categories" do
     it "returns all categories" do
-      get "/api/categories"
+      get "/api/v1/categories"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -18,7 +18,7 @@ RSpec.describe "Api::Categories", type: :request do
     end
 
     it "includes published posts count" do
-      get "/api/categories"
+      get "/api/v1/categories"
 
       json = JSON.parse(response.body)
       tech = json.find { |c| c["name"] == "Technology" }
@@ -27,16 +27,16 @@ RSpec.describe "Api::Categories", type: :request do
     end
 
     it "does not include posts in index" do
-      get "/api/categories"
+      get "/api/v1/categories"
 
       json = JSON.parse(response.body)
       expect(json.first["posts"]).to be_nil
     end
   end
 
-  describe "GET /api/categories/:slug" do
+  describe "GET /api/v1/categories/:slug" do
     it "returns the category with posts" do
-      get "/api/categories/#{category1.slug}"
+      get "/api/v1/categories/#{category1.slug}"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -47,14 +47,14 @@ RSpec.describe "Api::Categories", type: :request do
     end
 
     it "only includes published posts" do
-      get "/api/categories/#{category1.slug}"
+      get "/api/v1/categories/#{category1.slug}"
 
       json = JSON.parse(response.body)
       expect(json["posts"].length).to eq(1)
     end
 
     it "returns 404 for non-existent category" do
-      get "/api/categories/non-existent-slug"
+      get "/api/v1/categories/non-existent-slug"
 
       expect(response).to have_http_status(:not_found)
       json = JSON.parse(response.body)

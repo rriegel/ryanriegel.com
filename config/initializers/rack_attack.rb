@@ -8,19 +8,19 @@ unless Rails.env.test?
 
     # Throttle login attempts by IP
     throttle("login/ip", limit: 5, period: 20.seconds) do |req|
-      req.ip if req.path == "/api/login" && req.post?
+      req.ip if req.path == "/api/v1/login" && req.post?
     end
 
     # Throttle login attempts by email
     throttle("login/email", limit: 5, period: 20.seconds) do |req|
-      if req.path == "/api/login" && req.post?
+      if req.path == "/api/v1/login" && req.post?
         req.params.dig("email") || req.params.dig("user", "email")
       end
     end
 
     # Throttle registration attempts by IP
     throttle("register/ip", limit: 3, period: 1.minute) do |req|
-      req.ip if req.path == "/api/register" && req.post?
+      req.ip if req.path == "/api/v1/register" && req.post?
     end
 
     # Block requests with suspicious user agents

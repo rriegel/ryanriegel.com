@@ -9,9 +9,9 @@ RSpec.describe "Api::Posts", type: :request do
   end
   let!(:draft_post) { create(:post, :draft, title: "Draft Post") }
 
-  describe "GET /api/posts" do
+  describe "GET /api/v1/posts" do
     it "returns only published posts" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -21,7 +21,7 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "includes category and tags" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       json = JSON.parse(response.body)
       post = json["data"].first
@@ -32,14 +32,14 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "does not include body in index" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       json = JSON.parse(response.body)
       expect(json["data"].first["body"]).to be_nil
     end
 
     it "includes pagination metadata" do
-      get "/api/posts"
+      get "/api/v1/posts"
 
       json = JSON.parse(response.body)
       expect(json["meta"]).to be_present
@@ -49,9 +49,9 @@ RSpec.describe "Api::Posts", type: :request do
     end
   end
 
-  describe "GET /api/posts/:slug" do
+  describe "GET /api/v1/posts/:slug" do
     it "returns the post with body" do
-      get "/api/posts/#{published_post.slug}"
+      get "/api/v1/posts/#{published_post.slug}"
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -61,7 +61,7 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "returns 404 for non-existent post" do
-      get "/api/posts/non-existent-slug"
+      get "/api/v1/posts/non-existent-slug"
 
       expect(response).to have_http_status(:not_found)
       json = JSON.parse(response.body)
@@ -69,7 +69,7 @@ RSpec.describe "Api::Posts", type: :request do
     end
 
     it "returns 404 for draft posts" do
-      get "/api/posts/#{draft_post.slug}"
+      get "/api/v1/posts/#{draft_post.slug}"
 
       expect(response).to have_http_status(:not_found)
     end

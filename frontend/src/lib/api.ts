@@ -33,18 +33,18 @@ async function fetchApi<T>(path: string): Promise<T> {
 }
 
 export async function getPosts(): Promise<Post[]> {
-  const response = await fetchApi<{ data: Post[] }>('/api/posts');
+  const response = await fetchApi<{ data: Post[] }>('/api/v1/posts');
   return response.data;
 }
 
 export async function getPost(slug: string): Promise<Post> {
-  return fetchApi<Post>(`/api/posts/${slug}`);
+  return fetchApi<Post>(`/api/v1/posts/${slug}`);
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return fetchApi<Category[]>('/api/categories');
+  return fetchApi<Category[]>('/api/v1/categories');
 }
 
 export async function getTags(): Promise<Tag[]> {
-  return fetchApi<Tag[]>('/api/tags');
+  return fetchApi<Tag[]>('/api/v1/tags');
 }
