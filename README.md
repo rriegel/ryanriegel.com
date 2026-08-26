@@ -229,7 +229,7 @@ This deletes all seeded records (posts, tags, categories, users) while preservin
 
 | Resource   | Count | Details                                                        |
 |------------|-------|----------------------------------------------------------------|
-| User       | 1     | `admin@example.com` / `password123`                            |
+| User       | 1     | `admin@example.com` / `admin!!1`                                 |
 | Categories | 5     | Engineering, DevOps, Ruby on Rails, JavaScript, Personal       |
 | Tags       | 14    | ruby, rails, typescript, astro, docker, aws, testing, etc.     |
 | Posts      | 8     | 6 published + 2 drafts, with realistic HTML body content       |
