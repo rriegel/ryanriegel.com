@@ -38,13 +38,15 @@ try {
             </time>
           )}
           {post.category && (
-            <span class="category">in {post.category.name}</span>
+            <a href={`/blog/category/${post.category.slug}`} class="category-link">
+              in {post.category.name}
+            </a>
           )}
         </div>
         {post.tags.length > 0 && (
           <div class="tags">
             {post.tags.map((tag) => (
-              <span class="tag">{tag.name}</span>
+              <a href={`/blog/tag/${tag.slug}`} class="tag">{tag.name}</a>
             ))}
           </div>
         )}
@@ -77,6 +79,15 @@ try {
     margin-bottom: 0.75rem;
   }
 
+  .category-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .category-link:hover {
+    color: var(--color-link);
+  }
+
   .tags {
     display: flex;
     gap: 0.5rem;
@@ -89,6 +100,13 @@ try {
     padding: 0.2em 0.6em;
     border-radius: 3px;
     color: var(--color-text-muted);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .tag:hover {
+    background: #e0e0e0;
+    color: var(--color-text);
   }
 
   .content {

@@ -50,8 +50,11 @@ frontend:
 
 # Run tests
 test: db
-	@echo "Running tests..."
+	@echo "Running backend tests..."
 	@bundle exec rspec
+	@echo ""
+	@echo "Running frontend tests..."
+	@cd frontend && npm test
 
 # Clean up everything
 clean: stop
