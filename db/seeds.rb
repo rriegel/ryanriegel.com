@@ -189,6 +189,295 @@ end</code></pre>
     published_at: 4.days.ago,
     category: categories["Engineering"],
     tag_names: ["postgresql", "rails", "architecture"]
+  },
+  {
+    title: "React Server Components: What Changed and Why It Matters",
+    body: <<~HTML,
+      <p>React Server Components represent a fundamental shift in how we think about rendering. Here's what you need to know.</p>
+      <h2>The Old Model</h2>
+      <p>Client-side rendering meant shipping JavaScript bundles, waiting for hydration, then fetching data. Slow and complex.</p>
+      <h2>The New Model</h2>
+      <p>Server Components run on the server, fetch data directly, and send HTML to the client. No JavaScript overhead for static content.</p>
+      <h2>When to Use Client Components</h2>
+      <p>Interactivity still needs JavaScript. Forms, animations, and real-time updates belong in Client Components. Everything else can be a Server Component.</p>
+    HTML
+    excerpt: "Understanding React Server Components — the shift from client-side rendering to server-first architecture.",
+    status: :published,
+    published_at: 6.days.ago,
+    category: categories["JavaScript"],
+    tag_names: ["react", "architecture", "tutorial"]
+  },
+  {
+    title: "Building a Design System from Scratch",
+    body: <<~HTML,
+      <p>A design system isn't just a component library — it's a shared language between design and engineering. Here's how I built mine.</p>
+      <h2>Start with Tokens</h2>
+      <p>Design tokens are the atoms: colors, spacing, typography, shadows. Define them once, use them everywhere.</p>
+      <h2>Component Hierarchy</h2>
+      <p>Atoms → Molecules → Organisms → Templates → Pages. This hierarchy keeps complexity manageable and ensures consistency.</p>
+      <h2>Documentation is Everything</h2>
+      <p>A component without documentation doesn't exist. Show usage examples, props, and edge cases.</p>
+    HTML
+    excerpt: "Building a design system with tokens, component hierarchy, and documentation — creating a shared language for your team.",
+    status: :published,
+    published_at: 8.days.ago,
+    category: categories["Engineering"],
+    tag_names: ["react", "typescript", "architecture"]
+  },
+  {
+    title: "Rails 8: What's New and What's Changed",
+    body: <<~HTML,
+      <p>Rails 8 brings solid improvements to authentication, deployment, and developer experience. Here's what matters.</p>
+      <h2>Built-in Authentication</h2>
+      <p>Rails 8 includes a lightweight authentication generator. No more choosing between Devise, Clearance, or rolling your own.</p>
+      <h2>Kamal for Deployment</h2>
+      <p>Kamal replaces Capistrano as the default deployment tool. Docker-based, zero-downtime deploys out of the box.</p>
+      <h2>Performance Improvements</h2>
+      <p>Faster boot times, improved query performance, and better memory management across the board.</p>
+    HTML
+    excerpt: "Rails 8 highlights: built-in authentication, Kamal deployment, and performance improvements that matter.",
+    status: :published,
+    published_at: 10.days.ago,
+    category: categories["Ruby on Rails"],
+    tag_names: ["ruby", "rails", "tutorial"]
+  },
+  {
+    title: "The Art of Code Review: Beyond Finding Bugs",
+    body: <<~HTML,
+      <p>Code review isn't just about catching bugs — it's about knowledge sharing, maintaining quality, and building team trust.</p>
+      <h2>What to Look For</h2>
+      <p>Correctness first, then readability, then performance. Don't nitpick style when the logic is wrong.</p>
+      <h2>How to Give Feedback</h2>
+      <p>Be specific, be kind, ask questions instead of making demands. \"Have you considered...\" beats \"Change this to...\"</p>
+      <h2>When to Approve</h2>
+      <p>Perfect is the enemy of shipped. Approve when the code is good enough, not when it's perfect.</p>
+    HTML
+    excerpt: "Code review as knowledge sharing — how to give feedback that builds trust and improves code quality.",
+    status: :published,
+    published_at: 12.days.ago,
+    category: categories["Personal"],
+    tag_names: ["career", "tutorial"]
+  },
+  {
+    title: "Terraform State Management: Best Practices",
+    body: <<~HTML,
+      <p>Terraform state is the source of truth for your infrastructure. Mess it up, and you're in for a bad time.</p>
+      <h2>Remote State</h2>
+      <p>Never store state locally. Use S3 + DynamoDB for locking, or Terraform Cloud for managed state.</p>
+      <h2>State Locking</h2>
+      <p>Prevent concurrent modifications. DynamoDB provides locking for S3 backends — essential for team workflows.</p>
+      <h2>State Manipulation</h2>
+      <p>Sometimes you need to move resources in state. <code>terraform state mv</code> and <code>terraform import</code> are your friends.</p>
+    HTML
+    excerpt: "Terraform state management best practices — remote state, locking, and safe state manipulation.",
+    status: :published,
+    published_at: 14.days.ago,
+    category: categories["DevOps"],
+    tag_names: ["terraform", "aws", "architecture"]
+  },
+  {
+    title: "Writing Tests That Don't Slow You Down",
+    body: <<~HTML,
+      <p>Slow tests kill productivity. Here's how to write tests that give you confidence without slowing you down.</p>
+      <h2>Test Pyramid</h2>
+      <p>Many unit tests, fewer integration tests, even fewer end-to-end tests. The pyramid keeps your suite fast.</p>
+      <h2>Avoid Database Tests</h2>
+      <p>Database tests are slow and brittle. Use factories and mocks for unit tests, reserve the database for integration tests.</p>
+      <h2>Parallelize</h2>
+      <p>Run tests in parallel. RSpec with <code>parallel_tests</code> or Vitest's built-in parallelism can cut your suite time in half.</p>
+    HTML
+    excerpt: "Writing fast tests that give confidence — test pyramid, avoiding database tests, and parallelization strategies.",
+    status: :published,
+    published_at: 16.days.ago,
+    category: categories["Engineering"],
+    tag_names: ["testing", "rails", "tutorial"]
+  },
+  {
+    title: "Astro Content Collections: Type-Safe Markdown",
+    body: <<~HTML,
+      <p>Astro's Content Collections bring type safety to Markdown. Define schemas, validate frontmatter, and get autocomplete in your templates.</p>
+      <h2>Define a Schema</h2>
+      <p>Use Zod to define the shape of your content. Required fields, optional fields, enums — all validated at build time.</p>
+      <h2>Query Collections</h2>
+      <p>Filter, sort, and paginate your content with type-safe queries. No more guessing if a field exists.</p>
+      <h2>Render Content</h2>
+      <p>Astro compiles Markdown to HTML at build time. Fast, SEO-friendly, and easy to style.</p>
+    HTML
+    excerpt: "Astro Content Collections bring type safety to Markdown — define schemas, validate frontmatter, and get autocomplete.",
+    status: :published,
+    published_at: 18.days.ago,
+    category: categories["JavaScript"],
+    tag_names: ["astro", "typescript", "tutorial"]
+  },
+  {
+    title: "Docker Multi-Stage Builds: Smaller Images, Faster Deploys",
+    body: <<~HTML,
+      <p>Multi-stage builds let you separate build dependencies from runtime. The result: smaller images, faster deploys, better security.</p>
+      <h2>The Problem</h2>
+      <p>Build tools (compilers, package managers) are huge. You don't need them at runtime, but they bloat your image.</p>
+      <h2>The Solution</h2>
+      <p>Use one stage to build, another to run. Copy only the artifacts you need. Your final image is lean and secure.</p>
+      <h2>Example: Rails</h2>
+      <p>Stage 1: Install gems, compile assets. Stage 2: Copy compiled assets, runtime gems only. Result: 500MB → 150MB.</p>
+    HTML
+    excerpt: "Docker multi-stage builds separate build dependencies from runtime — smaller images, faster deploys, better security.",
+    status: :published,
+    published_at: 20.days.ago,
+    category: categories["DevOps"],
+    tag_names: ["docker", "architecture", "tutorial"]
+  },
+  {
+    title: "Active Record Callbacks: Use with Caution",
+    body: <<~HTML,
+      <p>Active Record callbacks are powerful but dangerous. They hide logic, create unexpected side effects, and make testing harder.</p>
+      <h2>The Problem</h2>
+      <p>Callbacks run automatically. When you call <code>save</code>, you don't see what else happens. This makes code hard to understand and debug.</p>
+      <h2>When to Use Them</h2>
+      <p>Simple, predictable logic: setting timestamps, normalizing data, updating counters. Avoid complex business logic.</p>
+      <h2>Alternatives</h2>
+      <p>Service objects, explicit methods, or database triggers. Make the logic visible and testable.</p>
+    HTML
+    excerpt: "Active Record callbacks are powerful but dangerous — when to use them, when to avoid them, and safer alternatives.",
+    status: :published,
+    published_at: 22.days.ago,
+    category: categories["Ruby on Rails"],
+    tag_names: ["ruby", "rails", "architecture"]
+  },
+  {
+    title: "Building a CLI Tool with Ruby",
+    body: <<~HTML,
+      <p>Ruby is great for CLI tools. Thor makes it easy to define commands, parse arguments, and generate help text.</p>
+      <h2>Thor Basics</h2>
+      <p>Define a class, add methods, and Thor handles the rest. Commands become methods, options become parameters.</p>
+      <h2>File Manipulation</h2>
+      <p>Thor provides helpers for file operations: copy, template, gsub_file. Perfect for generators and scaffolding.</p>
+      <h2>Distribution</h2>
+      <p>Package as a gem, install with <code>gem install</code>. Users get a command-line tool with autocomplete and help.</p>
+    HTML
+    excerpt: "Building CLI tools with Ruby and Thor — define commands, parse arguments, and distribute as gems.",
+    status: :published,
+    published_at: 24.days.ago,
+    category: categories["Ruby on Rails"],
+    tag_names: ["ruby", "tutorial"]
+  },
+  {
+    title: "Understanding JavaScript Closures",
+    body: <<~HTML,
+      <p>Closures are a fundamental JavaScript concept. Understanding them unlocks powerful patterns for data privacy and function factories.</p>
+      <h2>What is a Closure?</h2>
+      <p>A closure is a function that remembers its lexical scope, even when executed outside that scope. Simple but powerful.</p>
+      <h2>Data Privacy</h2>
+      <p>Use closures to create private variables. The inner function has access, the outside world doesn't.</p>
+      <h2>Function Factories</h2>
+      <p>Create specialized functions by closing over parameters. <code>multiplyBy(2)</code> returns a function that doubles its argument.</p>
+    HTML
+    excerpt: "Understanding JavaScript closures — data privacy, function factories, and the power of lexical scope.",
+    status: :published,
+    published_at: 26.days.ago,
+    category: categories["JavaScript"],
+    tag_names: ["typescript", "tutorial"]
+  },
+  {
+    title: "AWS Lambda Cold Starts: Myths and Reality",
+    body: <<~HTML,
+      <p>Cold starts are Lambda's reputation problem. In practice, they're rarely a real issue — here's why.</p>
+      <h2>What is a Cold Start?</h2>
+      <p>When Lambda initializes a new container to run your function. This takes time: loading runtime, downloading code, running initialization.</p>
+      <h2>How Bad Are They?</h2>
+      <p>For most apps, not bad at all. Modern runtimes initialize in milliseconds. Provisioned concurrency eliminates them entirely.</p>
+      <h2>When They Matter</h2>
+      <p>Latency-sensitive APIs, synchronous user flows. For background jobs, async processing, or scheduled tasks — who cares?</p>
+    HTML
+    excerpt: "AWS Lambda cold starts are rarely a real issue — understanding when they matter and how to mitigate them.",
+    status: :published,
+    published_at: 28.days.ago,
+    category: categories["DevOps"],
+    tag_names: ["aws", "architecture"]
+  },
+  {
+    title: "The Case for Boring Technology",
+    body: <<~HTML,
+      <p>Choose boring technology. It's reliable, well-understood, and lets you focus on what makes your product unique.</p>
+      <h2>Innovation Tokens</h2>
+      <p>You get a limited number of innovation tokens. Spend them on your core differentiator, not your infrastructure.</p>
+      <h2>PostgreSQL vs. The New Hotness</h2>
+      <p>PostgreSQL is boring. It's also fast, reliable, and feature-complete. The new database might be faster, but it's unproven.</p>
+      <h2>When to Innovate</h2>
+      <p>Innovate where it matters. If your product is a novel algorithm, spend tokens there. Not on your database.</p>
+    HTML
+    excerpt: "Choose boring technology — it's reliable, well-understood, and lets you focus on what makes your product unique.",
+    status: :published,
+    published_at: 30.days.ago,
+    category: categories["Personal"],
+    tag_names: ["architecture", "career"]
+  },
+  {
+    title: "RSpec Best Practices: Writing Maintainable Tests",
+    body: <<~HTML,
+      <p>Good tests are readable, maintainable, and fast. Here are the RSpec patterns I use to achieve all three.</p>
+      <h2>Describe Blocks</h2>
+      <p>Use <code>describe</code> for the unit under test, <code>context</code> for different scenarios. Keep nesting shallow — three levels max.</p>
+      <h2>Let vs. Before</h2>
+      <p>Use <code>let</code> for lazy-loaded test data. Use <code>before</code> for setup that runs regardless. Avoid instance variables.</p>
+      <h2>One Assertion Per Test</h2>
+      <p>Each test should verify one behavior. If it fails, you should know exactly what broke. Multiple assertions = confusion.</p>
+    HTML
+    excerpt: "RSpec best practices for writing readable, maintainable, fast tests — describe blocks, let vs before, one assertion per test.",
+    status: :published,
+    published_at: 32.days.ago,
+    category: categories["Ruby on Rails"],
+    tag_names: ["ruby", "rails", "testing", "tutorial"]
+  },
+  {
+    title: "Building Accessible Forms in React",
+    body: <<~HTML,
+      <p>Accessibility isn't optional. Here's how to build forms that work for everyone — keyboard navigation, screen readers, and all.</p>
+      <h2>Labels</h2>
+      <p>Every input needs a label. Use <code>&lt;label htmlFor=\"id\"&gt;</code> or wrap the input. No exceptions.</p>
+      <h2>Error Messages</h2>
+      <p>Connect errors to inputs with <code>aria-describedby</code>. Screen readers will announce them when the input is focused.</p>
+      <h2>Focus Management</h2>
+      <p>After submission, move focus to the success message or first error. Don't leave users stranded.</p>
+    HTML
+    excerpt: "Building accessible forms in React — labels, error messages, focus management, and keyboard navigation.",
+    status: :published,
+    published_at: 34.days.ago,
+    category: categories["JavaScript"],
+    tag_names: ["react", "typescript", "tutorial"]
+  },
+  {
+    title: "Database Indexing Strategies for Rails",
+    body: <<~HTML,
+      <p>Indexes are the difference between a fast app and a slow app. Here's how to use them effectively in Rails.</p>
+      <h2>When to Index</h2>
+      <p>Index columns you query frequently: foreign keys, WHERE clauses, ORDER BY columns. Don't index everything — indexes slow writes.</p>
+      <h2>Composite Indexes</h2>
+      <p>For queries with multiple conditions, use composite indexes. Order matters: put the most selective column first.</p>
+      <h2>Partial Indexes</h2>
+      <p>Index only the rows you query. <code>WHERE published = true</code> is smaller and faster than indexing all rows.</p>
+    HTML
+    excerpt: "Database indexing strategies for Rails — when to index, composite indexes, and partial indexes for performance.",
+    status: :draft,
+    published_at: nil,
+    category: categories["Engineering"],
+    tag_names: ["postgresql", "rails", "architecture"]
+  },
+  {
+    title: "My Development Environment in 2026",
+    body: <<~HTML,
+      <p>After years of tweaking, I've settled on a development setup that works. Here's what I use and why.</p>
+      <h2>Editor: Neovim</h2>
+      <p>Fast, customizable, and keyboard-driven. LSP for intelligence, Treesitter for syntax highlighting. It's everything I need.</p>
+      <h2>Terminal: WezTerm</h2>
+      <p>GPU-accelerated, Lua-configurable, multiplexer built-in. Replaced iTerm2 + tmux with a single tool.</p>
+      <h2>Shell: Fish</h2>
+      <p>Sane defaults, excellent autocomplete, no configuration needed. I stopped fighting Bash syntax years ago.</p>
+    HTML
+    excerpt: "My 2026 development environment — Neovim, WezTerm, Fish shell, and the tools that make me productive.",
+    status: :draft,
+    published_at: nil,
+    category: categories["Personal"],
+    tag_names: ["career"]
   }
 ]
 
