@@ -2,9 +2,20 @@
 interface Props {
   title: string;
   description?: string;
+  image?: string;
+  noindex?: boolean;
 }
 
-const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Astro.props;
+const {
+  title,
+  description = 'Ryan Riegel - Software engineer writing about development, projects, and things I\'m learning.',
+  image,
+  noindex = false
+} = Astro.props;
+
+const siteUrl = import.meta.env.SITE_URL || 'https://ryanriegel.com';
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const ogImage = image || `${siteUrl}/og-default.png`;
 ---
 
 <!doctype html>
@@ -12,17 +23,42 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="Ryan Riegel's Blog" href={`${siteUrl}/rss.xml`} />
     <meta name="generator" content={Astro.generator} />
+
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+    <link rel="canonical" href={canonicalUrl} />
     <title>{title}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="Ryan Riegel" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
   </head>
   <body>
     <div class="wrapper">
       <header>
         <nav>
           <a href="/" class="logo">Ryan Riegel</a>
-          <ul>
+          <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <ul class="nav-links">
             <li><a href="/blog">Blog</a></li>
             <li><a href="/about">About</a></li>
           </ul>
@@ -34,9 +70,19 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
       </main>
 
       <footer>
-        <p>&copy; {new Date().getFullYear()} Ryan Riegel</p>
+        <p>&copy; {new Date().getFullYear()} Ryan Riegel · <a href="/rss.xml">RSS</a></p>
       </footer>
     </div>
+
+    <script>
+      const toggle = document.querySelector('.nav-toggle');
+      const links = document.querySelector('.nav-links');
+      toggle?.addEventListener('click', () => {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        links?.classList.toggle('open');
+      });
+    </script>
   </body>
 </html>
 
@@ -87,6 +133,7 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   nav .logo {
@@ -94,6 +141,24 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
     font-size: 1.25rem;
     text-decoration: none;
     color: var(--color-text);
+  }
+
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-text);
+    transition: transform 0.2s;
   }
 
   nav ul {
@@ -122,6 +187,14 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
     border-top: 1px solid var(--color-border);
     color: var(--color-text-muted);
     font-size: 0.875rem;
+  }
+
+  footer a {
+    color: var(--color-text-muted);
+  }
+
+  footer a:hover {
+    color: var(--color-text);
   }
 
   a {
@@ -173,5 +246,34 @@ const { title, description = 'Ryan Riegel - Personal blog and portfolio' } = Ast
   pre code {
     background: none;
     padding: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .nav-toggle {
+      display: flex;
+    }
+
+    .nav-links {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .nav-links.open {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+    }
   }
 </style>

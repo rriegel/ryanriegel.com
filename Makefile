@@ -22,9 +22,10 @@ dev: db backend frontend
 # Stop all services
 stop:
 	@echo "Stopping ryanriegel.com services..."
-	@-pkill -f "rails server" 2>/dev/null || true
-	@-pkill -f "rails s" 2>/dev/null || true
-	@-pkill -f "astro dev" 2>/dev/null || true
+	@-pkill -9 -f "rails server" 2>/dev/null || true
+	@-pkill -9 -f "rails s" 2>/dev/null || true
+	@-pkill -9 -f "puma" 2>/dev/null || true
+	@-pkill -9 -f "astro dev" 2>/dev/null || true
 	@-docker stop ryanriegel-com-db 2>/dev/null || true
 	@echo "All services stopped"
 
@@ -50,8 +51,11 @@ frontend:
 
 # Run tests
 test: db
-	@echo "Running tests..."
+	@echo "Running backend tests..."
 	@bundle exec rspec
+	@echo ""
+	@echo "Running frontend tests..."
+	@cd frontend && npm test
 
 # Clean up everything
 clean: stop
