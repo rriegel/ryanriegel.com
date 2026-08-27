@@ -1,0 +1,60 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import PostList from '../../../components/PostList.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getPostsByTag, getTags, type Post, type PaginationMeta, type Tag } from '../../../lib/api';
+
+const { slug } = Astro.params;
+const page = Number(Astro.url.searchParams.get('page') || 1);
+
+let posts: Post[] = [];
+let meta: PaginationMeta = { current_page: 1, per_page: 10, total_entries: 0, total_pages: 1 };
+let tag: Tag | undefined;
+let error: string | null = null;
+
+try {
+  const tags = await getTags();
+  tag = tags.find(t => t.slug === slug);
+
+  if (!tag) {
+    error = `Tag "${slug}" not found`;
+  } else {
+    const response = await getPostsByTag(tag.id, page);
+    posts = response.data;
+    meta = response.meta;
+  }
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Failed to load posts';
+}
+---
+
+<Layout title={tag ? `Posts tagged "${tag.name}" - Ryan Riegel` : 'Tag Not Found'}>
+  <h1>{tag ? `Posts tagged "${tag.name}"` : 'Tag Not Found'}</h1>
+
+  {error && (
+    <p class="error">⚠️ {error}</p>
+  )}
+
+  {posts.length === 0 && !error && (
+    <p>No posts with this tag yet.</p>
+  )}
+
+  {posts.length > 0 && (
+    <>
+      <PostList posts={posts} />
+      <Pagination currentPage={meta.current_page} totalPages={meta.total_pages} basePath={`/blog/tag/${slug}`} />
+    </>
+  )}
+
+  <p><a href="/blog">← All posts</a></p>
+</Layout>
+
+<style>
+  .error {
+    color: #cc0000;
+    background: #fff0f0;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+</style>

@@ -6,7 +6,8 @@ let posts: Post[] = [];
 let error: string | null = null;
 
 try {
-  posts = await getPosts();
+  const response = await getPosts(1, 5);
+  posts = response.data;
 } catch (e) {
   error = e instanceof Error ? e.message : 'Failed to load posts';
 }
@@ -28,7 +29,7 @@ try {
     )}
 
     <ul class="post-list">
-      {posts.slice(0, 5).map((post) => (
+      {posts.map((post) => (
         <li>
           <a href={`/blog/${post.slug}`}>{post.title}</a>
           {post.published_at && (
