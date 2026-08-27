@@ -1,0 +1,56 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  basePath: string;
+}
+
+const { currentPage, totalPages, basePath } = Astro.props;
+---
+
+{totalPages > 1 && (
+  <nav class="pagination" aria-label="Pagination">
+    {currentPage > 1 && (
+      <a href={`${basePath}?page=${currentPage - 1}`} class="prev" rel="prev">
+        ← Previous
+      </a>
+    )}
+    <span class="page-info">
+      Page {currentPage} of {totalPages}
+    </span>
+    {currentPage < totalPages && (
+      <a href={`${basePath}?page=${currentPage + 1}`} class="next" rel="next">
+        Next →
+      </a>
+    )}
+  </nav>
+)}
+
+<style>
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .pagination a {
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .pagination a:hover {
+    border-color: var(--color-link);
+    color: var(--color-link);
+  }
+
+  .page-info {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+</style>

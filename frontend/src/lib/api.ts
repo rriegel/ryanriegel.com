@@ -24,6 +24,18 @@ export interface Tag {
   slug: string;
 }
 
+export interface PaginationMeta {
+  current_page: number;
+  per_page: number;
+  total_entries: number;
+  total_pages: number;
+}
+
+export interface PostsResponse {
+  data: Post[];
+  meta: PaginationMeta;
+}
+
 async function fetchApi<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
@@ -32,9 +44,16 @@ async function fetchApi<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function getPosts(): Promise<Post[]> {
-  const response = await fetchApi<{ data: Post[] }>('/api/v1/posts');
-  return response.data;
+export async function getPosts(page: number = 1, perPage: number = 10): Promise<PostsResponse> {
+  return fetchApi<PostsResponse>(`/api/v1/posts?page=${page}&per_page=${perPage}`);
+}
+
+export async function getPostsByCategory(categoryId: number, page: number = 1): Promise<PostsResponse> {
+  return fetchApi<PostsResponse>(`/api/v1/posts?category_id=${categoryId}&page=${page}`);
+}
+
+export async function getPostsByTag(tagId: number, page: number = 1): Promise<PostsResponse> {
+  return fetchApi<PostsResponse>(`/api/v1/posts?tag_id=${tagId}&page=${page}`);
 }
 
 export async function getPost(slug: string): Promise<Post> {

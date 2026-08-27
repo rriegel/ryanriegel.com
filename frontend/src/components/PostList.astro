@@ -1,0 +1,117 @@
+---
+import type { Post } from '../lib/api';
+
+interface Props {
+  posts: Post[];
+  showExcerpt?: boolean;
+}
+
+const { posts, showExcerpt = true } = Astro.props;
+---
+
+<ul class="post-list">
+  {posts.map((post) => (
+    <li>
+      <article>
+        <h2><a href={`/blog/${post.slug}`}>{post.title}</a></h2>
+        <div class="meta">
+          {post.published_at && (
+            <time datetime={post.published_at}>
+              {new Date(post.published_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </time>
+          )}
+          {post.category && (
+            <a href={`/blog/category/${post.category.slug}`} class="category-link">
+              {post.category.name}
+            </a>
+          )}
+        </div>
+        {showExcerpt && post.excerpt && <p class="excerpt">{post.excerpt}</p>}
+        {post.tags.length > 0 && (
+          <div class="tags">
+            {post.tags.map((tag) => (
+              <a href={`/blog/tag/${tag.slug}`} class="tag">{tag.name}</a>
+            ))}
+          </div>
+        )}
+      </article>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .post-list {
+    list-style: none;
+  }
+
+  .post-list li {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .post-list li:last-child {
+    border-bottom: none;
+  }
+
+  .post-list h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-list h2 a {
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .post-list h2 a:hover {
+    color: var(--color-link);
+  }
+
+  .meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .category-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .category-link:hover {
+    color: var(--color-link);
+  }
+
+  .excerpt {
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    background: #f0f0f0;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .tag:hover {
+    background: #e0e0e0;
+    color: var(--color-text);
+  }
+</style>

@@ -1,12 +1,19 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getPosts, type Post } from '../../lib/api';
+import PostList from '../../components/PostList.astro';
+import Pagination from '../../components/Pagination.astro';
+import { getPosts, type Post, type PaginationMeta } from '../../lib/api';
+
+const page = Number(Astro.url.searchParams.get('page') || 1);
 
 let posts: Post[] = [];
+let meta: PaginationMeta = { current_page: 1, per_page: 10, total_entries: 0, total_pages: 1 };
 let error: string | null = null;
 
 try {
-  posts = await getPosts();
+  const response = await getPosts(page);
+  posts = response.data;
+  meta = response.meta;
 } catch (e) {
   error = e instanceof Error ? e.message : 'Failed to load posts';
 }
@@ -23,95 +30,15 @@ try {
     <p>No posts yet. Check back soon!</p>
   )}
 
-  <ul class="post-list">
-    {posts.map((post) => (
-      <li>
-        <article>
-          <h2><a href={`/blog/${post.slug}`}>{post.title}</a></h2>
-          <div class="meta">
-            {post.published_at && (
-              <time datetime={post.published_at}>
-                {new Date(post.published_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </time>
-            )}
-            {post.category && (
-              <span class="category">{post.category.name}</span>
-            )}
-          </div>
-          {post.excerpt && <p class="excerpt">{post.excerpt}</p>}
-          {post.tags.length > 0 && (
-            <div class="tags">
-              {post.tags.map((tag) => (
-                <span class="tag">{tag.name}</span>
-              ))}
-            </div>
-          )}
-        </article>
-      </li>
-    ))}
-  </ul>
+  {posts.length > 0 && (
+    <>
+      <PostList posts={posts} />
+      <Pagination currentPage={meta.current_page} totalPages={meta.total_pages} basePath="/blog" />
+    </>
+  )}
 </Layout>
 
 <style>
-  .post-list {
-    list-style: none;
-  }
-
-  .post-list li {
-    margin-bottom: 2.5rem;
-    padding-bottom: 2.5rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .post-list li:last-child {
-    border-bottom: none;
-  }
-
-  .post-list h2 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  .post-list h2 a {
-    text-decoration: none;
-    color: var(--color-text);
-  }
-
-  .post-list h2 a:hover {
-    color: var(--color-link);
-  }
-
-  .meta {
-    display: flex;
-    gap: 1rem;
-    color: var(--color-text-muted);
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .excerpt {
-    color: var(--color-text-muted);
-    margin-bottom: 0.5rem;
-  }
-
-  .tags {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .tag {
-    font-size: 0.75rem;
-    background: #f0f0f0;
-    padding: 0.2em 0.6em;
-    border-radius: 3px;
-    color: var(--color-text-muted);
-  }
-
   .error {
     color: #cc0000;
     background: #fff0f0;

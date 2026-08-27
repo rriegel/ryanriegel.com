@@ -1,0 +1,44 @@
+---
+import { getPosts, type Post } from '../lib/api';
+
+const siteUrl = import.meta.env.SITE_URL || 'https://ryanriegel.com';
+
+Astro.response.headers.set('Content-Type', 'application/rss+xml; charset=utf-8');
+
+let posts: Post[] = [];
+try {
+  const response = await getPosts(1, 20);
+  posts = response.data;
+} catch (e) {
+  // Empty feed on error
+}
+
+const feedItems = posts.map(post => {
+  const link = `${siteUrl}/blog/${post.slug}`;
+  const pubDate = post.published_at ? new Date(post.published_at).toUTCString() : '';
+  
+  return `    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${link}</link>
+      <guid isPermaLink="true">${link}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description><![CDATA[${post.excerpt || ''}]]></description>
+      ${post.category ? `<category>${post.category.name}</category>` : ''}
+    </item>`;
+}).join('\n');
+
+const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ryan Riegel's Blog</title>
+    <link>${siteUrl}</link>
+    <description>Software engineer writing about development, projects, and things I'm learning.</description>
+    <language>en-us</language>
+    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+${feedItems}
+  </channel>
+</rss>`;
+---
+
+<Fragment set:html={rss} />
