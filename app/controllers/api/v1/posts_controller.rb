@@ -36,15 +36,19 @@ class Api::V1::PostsController < ApplicationController
   end
 
   def create
-    post = Post.new(post_params)
-    if post.save
-      render json: post_json(post, full: true), status: :created
+    @post = Post.new(post_params)
+    attach_cover_image_from_signed_id(@post)
+
+    if @post.save
+      render json: post_json(@post, full: true), status: :created
     else
-      render json: { errors: post.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: @post.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
   def update
+    attach_cover_image_from_signed_id(@post) if params[:post][:cover_image_signed_id].present?
+
     if @post.update(post_params)
       render json: post_json(@post, full: true)
     else
@@ -74,7 +78,18 @@ class Api::V1::PostsController < ApplicationController
   end
 
   def post_params
-    params.require(:post).permit(:title, :body, :status, :category_id, :published_at, :cover_image, tag_ids: [])
+    params.require(:post).permit(:title, :body, :status, :category_id, :published_at, :cover_image, :cover_image_signed_id, tag_ids: [])
+  end
+
+  def attach_cover_image_from_signed_id(post)
+    return unless params[:post][:cover_image_signed_id].present?
+
+    begin
+      blob = ActiveStorage::Blob.find_signed!(params[:post][:cover_image_signed_id])
+      post.cover_image.attach(blob)
+    rescue ActiveStorage::Blob::SignedIdNotFound
+      # Invalid signed ID, will be caught by validation
+    end
   end
 
   def post_json(post, full: false)

@@ -2,10 +2,11 @@ require "rails_helper"
 
 RSpec.describe "API::Posts Write Operations", type: :request do
   let(:user) { create(:user) }
-  let(:auth_headers) do
+  let(:auth_cookie) do
     post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-    { "Authorization" => response.headers["Authorization"] }
+    response.cookies["auth_token"]
   end
+  let(:auth_headers) { { "Cookie" => "auth_token=#{auth_cookie}" } }
 
   describe "POST /api/v1/posts" do
     let(:valid_params) do
