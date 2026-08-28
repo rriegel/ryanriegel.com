@@ -4,7 +4,7 @@ RSpec.describe "API::Tags Write Operations", type: :request do
   let(:user) { create(:user) }
   let(:auth_headers) do
     post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-    { "Authorization" => response.headers["Authorization"] }
+    { "Cookie" => "auth_token=#{response.cookies["auth_token"]}" }
   end
 
   describe "POST /api/v1/tags" do

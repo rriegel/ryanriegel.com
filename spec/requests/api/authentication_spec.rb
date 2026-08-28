@@ -53,7 +53,7 @@ RSpec.describe "Authentication", type: :request do
   describe "DELETE /api/v1/logout" do
     let(:auth_headers) do
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      { "Authorization" => response.headers["Authorization"] }
+      { "Cookie" => "auth_token=#{response.cookies["auth_token"]}" }
     end
 
     it "logs out successfully" do
