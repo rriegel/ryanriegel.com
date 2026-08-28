@@ -234,6 +234,27 @@ This deletes all seeded records (posts, tags, categories, users) while preservin
 | Tags       | 14    | ruby, rails, typescript, astro, docker, aws, testing, etc.     |
 | Posts      | 25    | 21 published + 4 drafts, with realistic HTML body content      |
 
+### Adding test media
+
+Drop test media files in `db/seeds/media/`:
+
+```
+db/seeds/media/
+├── cover_images/     # 6 cover images (cover-01.jpg through cover-06.jpg)
+│   ├── cover-01.jpg  # 1200x630px recommended (16:9)
+│   ├── cover-02.jpg
+│   └── ...
+├── inline/           # Inline media for post bodies
+│   ├── image-01.jpg
+│   ├── video-01.mp4
+│   └── audio-01.mp3
+└── README.md
+```
+
+The seed script automatically attaches cover images to posts 1, 3, 5, 8, 10, and 13. If files don't exist, they're skipped gracefully.
+
+See `db/seeds/media/README.md` for details.
+
 ### Admin login
 
 After seeding, use these credentials to authenticate via the API:

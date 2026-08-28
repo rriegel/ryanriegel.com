@@ -8,6 +8,7 @@ export interface Post {
   body?: string;
   status: string;
   published_at: string | null;
+  cover_image: string | null;
   category: { name: string; slug: string } | null;
   tags: { name: string; slug: string }[];
 }

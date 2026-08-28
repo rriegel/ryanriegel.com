@@ -74,7 +74,7 @@ class Api::V1::PostsController < ApplicationController
   end
 
   def post_params
-    params.require(:post).permit(:title, :body, :status, :category_id, :published_at, tag_ids: [])
+    params.require(:post).permit(:title, :body, :status, :category_id, :published_at, :cover_image, tag_ids: [])
   end
 
   def post_json(post, full: false)
@@ -87,6 +87,7 @@ class Api::V1::PostsController < ApplicationController
       status: post.status,
       published_at: post.published_at,
       lock_version: post.lock_version,
+      cover_image: post.cover_image.attached? ? url_for(post.cover_image) : nil,
       category: post.category ? { name: post.category.name, slug: post.category.slug } : nil,
       tags: post.tags.map { |tag| { name: tag.name, slug: tag.slug } }
     }
