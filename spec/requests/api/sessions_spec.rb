@@ -30,18 +30,18 @@ RSpec.describe "API::Sessions", type: :request do
 
   describe "DELETE /api/v1/logout" do
     it "clears auth cookie when authenticated" do
-      # Login first
+      # Login first - cookie is automatically persisted in test session
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      cookie = response.cookies["auth_token"]
+      expect(response.cookies["auth_token"]).to be_present
 
-      # Logout with cookie
-      delete "/api/v1/logout", headers: { "Cookie" => "auth_token=#{cookie}" }
+      # Logout - cookie is automatically included
+      delete "/api/v1/logout", as: :json
 
       expect(response).to have_http_status(:ok)
     end
 
     it "returns 401 when not authenticated" do
-      delete "/api/v1/logout"
+      delete "/api/v1/logout", as: :json
 
       expect(response).to have_http_status(:unauthorized)
     end
@@ -49,14 +49,13 @@ RSpec.describe "API::Sessions", type: :request do
 
   describe "Cookie-based authentication" do
     it "allows authenticated requests with cookie" do
-      # Login to get cookie
+      # Login - cookie is automatically persisted in test session
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      cookie = response.cookies["auth_token"]
+      expect(response.cookies["auth_token"]).to be_present
 
-      # Make authenticated request with cookie
+      # Make authenticated request - cookie is automatically included
       post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body content", status: "draft" } },
-           headers: { "Cookie" => "auth_token=#{cookie}" },
            as: :json
 
       expect(response).to have_http_status(:created)
