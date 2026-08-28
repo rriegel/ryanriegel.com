@@ -59,7 +59,7 @@ posts_data = [
     status: :published,
     published_at: 2.weeks.ago,
     category: categories["Engineering"],
-    tag_names: ["ruby", "rails", "astro", "architecture"]
+    tag_names: [ "ruby", "rails", "astro", "architecture" ]
   },
   {
     title: "TDD in Rails: A Practical Guide to RSpec and FactoryBot",
@@ -81,7 +81,7 @@ end</code></pre>
     status: :published,
     published_at: 1.week.ago,
     category: categories["Ruby on Rails"],
-    tag_names: ["ruby", "rails", "testing", "tutorial"]
+    tag_names: [ "ruby", "rails", "testing", "tutorial" ]
   },
   {
     title: "CI/CD with GitHub Actions: From Zero to Production",
@@ -102,7 +102,7 @@ end</code></pre>
     status: :published,
     published_at: 3.days.ago,
     category: categories["DevOps"],
-    tag_names: ["ci-cd", "testing", "aws", "tutorial"]
+    tag_names: [ "ci-cd", "testing", "aws", "tutorial" ]
   },
   {
     title: "Docker for Rails Development: A Makefile-Driven Workflow",
@@ -122,7 +122,7 @@ end</code></pre>
     status: :published,
     published_at: 5.days.ago,
     category: categories["DevOps"],
-    tag_names: ["docker", "rails", "postgresql", "tutorial"]
+    tag_names: [ "docker", "rails", "postgresql", "tutorial" ]
   },
   {
     title: "TypeScript with Astro: Type-Safe API Calls",
@@ -141,7 +141,7 @@ end</code></pre>
     status: :published,
     published_at: 1.day.ago,
     category: categories["JavaScript"],
-    tag_names: ["typescript", "astro", "react", "tutorial"]
+    tag_names: [ "typescript", "astro", "react", "tutorial" ]
   },
   {
     title: "Infrastructure as Code: Deploying to AWS with Terraform",
@@ -156,7 +156,7 @@ end</code></pre>
     status: :draft,
     published_at: nil,
     category: categories["DevOps"],
-    tag_names: ["aws", "terraform", "architecture"]
+    tag_names: [ "aws", "terraform", "architecture" ]
   },
   {
     title: "Why I Left My Job to Build in Public",
@@ -171,7 +171,7 @@ end</code></pre>
     status: :draft,
     published_at: nil,
     category: categories["Personal"],
-    tag_names: ["career"]
+    tag_names: [ "career" ]
   },
   {
     title: "PostgreSQL Performance Tips for Rails Developers",
@@ -188,7 +188,7 @@ end</code></pre>
     status: :published,
     published_at: 4.days.ago,
     category: categories["Engineering"],
-    tag_names: ["postgresql", "rails", "architecture"]
+    tag_names: [ "postgresql", "rails", "architecture" ]
   },
   {
     title: "React Server Components: What Changed and Why It Matters",
@@ -205,7 +205,7 @@ end</code></pre>
     status: :published,
     published_at: 6.days.ago,
     category: categories["JavaScript"],
-    tag_names: ["react", "architecture", "tutorial"]
+    tag_names: [ "react", "architecture", "tutorial" ]
   },
   {
     title: "Building a Design System from Scratch",
@@ -222,7 +222,7 @@ end</code></pre>
     status: :published,
     published_at: 8.days.ago,
     category: categories["Engineering"],
-    tag_names: ["react", "typescript", "architecture"]
+    tag_names: [ "react", "typescript", "architecture" ]
   },
   {
     title: "Rails 8: What's New and What's Changed",
@@ -239,7 +239,7 @@ end</code></pre>
     status: :published,
     published_at: 10.days.ago,
     category: categories["Ruby on Rails"],
-    tag_names: ["ruby", "rails", "tutorial"]
+    tag_names: [ "ruby", "rails", "tutorial" ]
   },
   {
     title: "The Art of Code Review: Beyond Finding Bugs",
@@ -256,7 +256,7 @@ end</code></pre>
     status: :published,
     published_at: 12.days.ago,
     category: categories["Personal"],
-    tag_names: ["career", "tutorial"]
+    tag_names: [ "career", "tutorial" ]
   },
   {
     title: "Terraform State Management: Best Practices",
@@ -273,7 +273,7 @@ end</code></pre>
     status: :published,
     published_at: 14.days.ago,
     category: categories["DevOps"],
-    tag_names: ["terraform", "aws", "architecture"]
+    tag_names: [ "terraform", "aws", "architecture" ]
   },
   {
     title: "Writing Tests That Don't Slow You Down",
@@ -290,7 +290,7 @@ end</code></pre>
     status: :published,
     published_at: 16.days.ago,
     category: categories["Engineering"],
-    tag_names: ["testing", "rails", "tutorial"]
+    tag_names: [ "testing", "rails", "tutorial" ]
   },
   {
     title: "Astro Content Collections: Type-Safe Markdown",
@@ -307,7 +307,7 @@ end</code></pre>
     status: :published,
     published_at: 18.days.ago,
     category: categories["JavaScript"],
-    tag_names: ["astro", "typescript", "tutorial"]
+    tag_names: [ "astro", "typescript", "tutorial" ]
   },
   {
     title: "Docker Multi-Stage Builds: Smaller Images, Faster Deploys",
@@ -324,7 +324,7 @@ end</code></pre>
     status: :published,
     published_at: 20.days.ago,
     category: categories["DevOps"],
-    tag_names: ["docker", "architecture", "tutorial"]
+    tag_names: [ "docker", "architecture", "tutorial" ]
   },
   {
     title: "Active Record Callbacks: Use with Caution",
@@ -341,7 +341,7 @@ end</code></pre>
     status: :published,
     published_at: 22.days.ago,
     category: categories["Ruby on Rails"],
-    tag_names: ["ruby", "rails", "architecture"]
+    tag_names: [ "ruby", "rails", "architecture" ]
   },
   {
     title: "Building a CLI Tool with Ruby",
@@ -358,7 +358,7 @@ end</code></pre>
     status: :published,
     published_at: 24.days.ago,
     category: categories["Ruby on Rails"],
-    tag_names: ["ruby", "tutorial"]
+    tag_names: [ "ruby", "tutorial" ]
   },
   {
     title: "Understanding JavaScript Closures",
@@ -375,7 +375,7 @@ end</code></pre>
     status: :published,
     published_at: 26.days.ago,
     category: categories["JavaScript"],
-    tag_names: ["typescript", "tutorial"]
+    tag_names: [ "typescript", "tutorial" ]
   },
   {
     title: "AWS Lambda Cold Starts: Myths and Reality",
@@ -392,7 +392,7 @@ end</code></pre>
     status: :published,
     published_at: 28.days.ago,
     category: categories["DevOps"],
-    tag_names: ["aws", "architecture"]
+    tag_names: [ "aws", "architecture" ]
   },
   {
     title: "The Case for Boring Technology",
@@ -409,7 +409,7 @@ end</code></pre>
     status: :published,
     published_at: 30.days.ago,
     category: categories["Personal"],
-    tag_names: ["architecture", "career"]
+    tag_names: [ "architecture", "career" ]
   },
   {
     title: "RSpec Best Practices: Writing Maintainable Tests",
@@ -426,7 +426,7 @@ end</code></pre>
     status: :published,
     published_at: 32.days.ago,
     category: categories["Ruby on Rails"],
-    tag_names: ["ruby", "rails", "testing", "tutorial"]
+    tag_names: [ "ruby", "rails", "testing", "tutorial" ]
   },
   {
     title: "Building Accessible Forms in React",
@@ -443,7 +443,7 @@ end</code></pre>
     status: :published,
     published_at: 34.days.ago,
     category: categories["JavaScript"],
-    tag_names: ["react", "typescript", "tutorial"]
+    tag_names: [ "react", "typescript", "tutorial" ]
   },
   {
     title: "Database Indexing Strategies for Rails",
@@ -460,7 +460,7 @@ end</code></pre>
     status: :draft,
     published_at: nil,
     category: categories["Engineering"],
-    tag_names: ["postgresql", "rails", "architecture"]
+    tag_names: [ "postgresql", "rails", "architecture" ]
   },
   {
     title: "My Development Environment in 2026",
@@ -477,7 +477,7 @@ end</code></pre>
     status: :draft,
     published_at: nil,
     category: categories["Personal"],
-    tag_names: ["career"]
+    tag_names: [ "career" ]
   }
 ]
 
