@@ -2,7 +2,7 @@ class Post < ApplicationRecord
   belongs_to :category, optional: true
   has_many :post_tags, dependent: :destroy
   has_many :tags, through: :post_tags
-  
+
   has_one_attached :cover_image
 
   validates :title, presence: true, uniqueness: true
@@ -47,19 +47,19 @@ class Post < ApplicationRecord
       ],
       attributes: {
         all: %w[href src alt title class],
-        'video' => %w[controls poster width height],
-        'audio' => %w[controls],
-        'source' => %w[src type],
-        'iframe' => %w[src width height frameborder allowfullscreen allow]
+        "video" => %w[controls poster width height],
+        "audio" => %w[controls],
+        "source" => %w[src type],
+        "iframe" => %w[src width height frameborder allowfullscreen allow]
       }
     )
   end
 
   def acceptable_cover_image
     return unless cover_image.attached?
-    
+
     unless cover_image.content_type.in?(%w[image/jpeg image/png image/webp])
-      errors.add(:cover_image, 'must be a JPEG, PNG, or WebP image')
+      errors.add(:cover_image, "must be a JPEG, PNG, or WebP image")
       cover_image.purge
     end
   end

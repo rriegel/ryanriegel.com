@@ -485,7 +485,7 @@ end</code></pre>
 def attach_cover_image(post, filename)
   media_path = Rails.root.join("db/seeds/media/cover_images/#{filename}")
   return unless File.exist?(media_path)
-  
+
   post.cover_image.attach(io: File.open(media_path), filename: filename)
   puts "    ✓ Attached cover image: #{filename}"
 rescue => e
@@ -493,7 +493,7 @@ rescue => e
 end
 
 # Posts that should have cover images (by index)
-posts_with_covers = [0, 2, 4, 7, 9, 12]
+posts_with_covers = [ 0, 2, 4, 7, 9, 12 ]
 
 posts_data.each_with_index do |data, index|
   tag_names = data.delete(:tag_names)
