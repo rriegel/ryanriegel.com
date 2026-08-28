@@ -481,7 +481,21 @@ end</code></pre>
   }
 ]
 
-posts_data.each do |data|
+# Helper method to attach cover image
+def attach_cover_image(post, filename)
+  media_path = Rails.root.join("db/seeds/media/cover_images/#{filename}")
+  return unless File.exist?(media_path)
+  
+  post.cover_image.attach(io: File.open(media_path), filename: filename)
+  puts "    ✓ Attached cover image: #{filename}"
+rescue => e
+  puts "    ✗ Failed to attach #{filename}: #{e.message}"
+end
+
+# Posts that should have cover images (by index)
+posts_with_covers = [0, 2, 4, 7, 9, 12]
+
+posts_data.each_with_index do |data, index|
   tag_names = data.delete(:tag_names)
   post = Post.find_or_create_by!(title: data[:title]) do |p|
     p.body = data[:body]
@@ -494,6 +508,12 @@ posts_data.each do |data|
   # Associate tags
   tag_names.each do |name|
     post.tags << tags[name] unless post.tags.include?(tags[name])
+  end
+
+  # Attach cover image if this post is in the cover list
+  if posts_with_covers.include?(index)
+    cover_filename = "cover-#{(index + 1).to_s.rjust(2, '0')}.jpg"
+    attach_cover_image(post, cover_filename)
   end
 
   puts "  Post: #{post.title} [#{post.status}] (#{post.slug})"

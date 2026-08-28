@@ -25,6 +25,11 @@ try {
 
   {post && (
     <article class="post">
+      {post.cover_image && (
+        <div class="cover">
+          <img src={post.cover_image} alt={post.title} />
+        </div>
+      )}
       <header>
         <h1>{post.title}</h1>
         <div class="meta">
@@ -62,6 +67,18 @@ try {
 </Layout>
 
 <style>
+  .post .cover {
+    margin-bottom: 2rem;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .post .cover img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
   .post header {
     margin-bottom: 2rem;
   }
@@ -118,6 +135,25 @@ try {
     height: auto;
     border-radius: 4px;
     margin: 1.5rem 0;
+  }
+
+  .content :global(video) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 1.5rem 0;
+  }
+
+  .content :global(audio) {
+    width: 100%;
+    margin: 1.5rem 0;
+  }
+
+  .content :global(iframe) {
+    max-width: 100%;
+    border-radius: 4px;
+    margin: 1.5rem 0;
+    border: none;
   }
 
   .content :global(blockquote) {
