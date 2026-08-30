@@ -14,7 +14,7 @@ class Api::V1::PostsController < ApplicationController
     posts = posts.joins(:tags).where(tags: { id: params[:tag_id] }) if params[:tag_id].present?
     posts = posts.where("published_at >= ?", params[:start_date]) if params[:start_date].present?
     posts = posts.where("published_at <= ?", params[:end_date]) if params[:end_date].present?
-    
+
     # Status filter (admin only)
     if params[:status].present? && current_user
       posts = posts.where(status: params[:status]) unless params[:status] == "all"
@@ -24,10 +24,10 @@ class Api::V1::PostsController < ApplicationController
     sort_by = params[:sort_by] || "published_at"
     sort_dir = params[:sort_dir] == "asc" ? :asc : :desc
     posts = case sort_by
-            when "title" then posts.order(title: sort_dir)
-            when "created_at" then posts.order(created_at: sort_dir)
-            else posts.order(published_at: sort_dir)
-            end
+    when "title" then posts.order(title: sort_dir)
+    when "created_at" then posts.order(created_at: sort_dir)
+    else posts.order(published_at: sort_dir)
+    end
 
     # Pagination
     page = [ params[:page].to_i, 1 ].max
