@@ -2,15 +2,32 @@ class Api::V1::PostsController < ApplicationController
   before_action :authenticate_user!, only: [ :create, :update, :destroy ]
   before_action :set_post, only: [ :update, :destroy ]
   before_action :set_published_post, only: [ :show ]
+  before_action :optional_authenticate_user!, only: [ :index ]
 
   def index
-    posts = Post.published.includes(:category, :tags)
+    # Admins can see all posts; public API only shows published
+    posts = current_user ? Post.all : Post.published
+    posts = posts.includes(:category, :tags)
 
     # Filtering
     posts = posts.where(category_id: params[:category_id]) if params[:category_id].present?
     posts = posts.joins(:tags).where(tags: { id: params[:tag_id] }) if params[:tag_id].present?
     posts = posts.where("published_at >= ?", params[:start_date]) if params[:start_date].present?
     posts = posts.where("published_at <= ?", params[:end_date]) if params[:end_date].present?
+    
+    # Status filter (admin only)
+    if params[:status].present? && current_user
+      posts = posts.where(status: params[:status]) unless params[:status] == "all"
+    end
+
+    # Sorting
+    sort_by = params[:sort_by] || "published_at"
+    sort_dir = params[:sort_dir] == "asc" ? :asc : :desc
+    posts = case sort_by
+            when "title" then posts.order(title: sort_dir)
+            when "created_at" then posts.order(created_at: sort_dir)
+            else posts.order(published_at: sort_dir)
+            end
 
     # Pagination
     page = [ params[:page].to_i, 1 ].max
@@ -18,7 +35,7 @@ class Api::V1::PostsController < ApplicationController
     offset = (page - 1) * per_page
 
     total = posts.count
-    posts = posts.order(published_at: :desc).offset(offset).limit(per_page)
+    posts = posts.offset(offset).limit(per_page)
 
     render json: {
       data: posts.map { |post| post_json(post) },

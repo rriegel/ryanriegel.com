@@ -11,14 +11,14 @@ RSpec.describe "API::Sessions", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]["code"]).to eq(200)
-      expect(response.cookies["auth_token"]).to be_present
+      expect(response.parsed_body["data"]["token"]).to be_present
     end
 
     it "returns 401 with invalid credentials" do
       post "/api/v1/login", params: { user: { email: user.email, password: "wrong" } }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response.cookies["auth_token"]).to be_nil
+      expect(response.parsed_body["data"]).to be_nil
     end
 
     it "returns user data in response body" do
@@ -30,12 +30,13 @@ RSpec.describe "API::Sessions", type: :request do
 
   describe "DELETE /api/v1/logout" do
     it "clears auth cookie when authenticated" do
-      # Login first - cookie is automatically persisted in test session
+      # Login first
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      expect(response.cookies["auth_token"]).to be_present
+      token = response.parsed_body["data"]["token"]
+      expect(token).to be_present
 
-      # Logout - cookie is automatically included
-      delete "/api/v1/logout", as: :json
+      # Logout with Bearer token
+      delete "/api/v1/logout", headers: { "Authorization" => "Bearer #{token}" }, as: :json
 
       expect(response).to have_http_status(:ok)
     end
@@ -49,13 +50,15 @@ RSpec.describe "API::Sessions", type: :request do
 
   describe "Cookie-based authentication" do
     it "allows authenticated requests with cookie" do
-      # Login - cookie is automatically persisted in test session
+      # Login and get token
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      expect(response.cookies["auth_token"]).to be_present
+      token = response.parsed_body["data"]["token"]
+      expect(token).to be_present
 
-      # Make authenticated request - cookie is automatically included
+      # Make authenticated request with Bearer token
       post "/api/v1/posts",
            params: { post: { title: "Test", body: "Body content", status: "draft" } },
+           headers: { "Authorization" => "Bearer #{token}" },
            as: :json
 
       expect(response).to have_http_status(:created)

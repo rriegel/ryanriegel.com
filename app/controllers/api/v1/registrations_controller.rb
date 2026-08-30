@@ -7,7 +7,7 @@ class Api::V1::RegistrationsController < ApplicationController
       set_auth_cookie(token)
       render json: {
         status: { code: 200, message: "Signed up successfully." },
-        data: { user: user_json(user) }
+        data: { user: user_json(user), token: token }
       }, status: :ok
     else
       render json: {

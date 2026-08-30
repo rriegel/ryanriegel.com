@@ -7,6 +7,15 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
   end
 
+  def login_and_get_token
+    login
+    @auth_token = response.parsed_body.dig("data", "token")
+  end
+
+  def auth_headers
+    { "Authorization" => "Bearer #{@auth_token}" }
+  end
+
   describe "POST /api/v1/posts" do
     let(:valid_params) do
       {
@@ -19,8 +28,8 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
 
     it "creates a post when authenticated" do
-      login
-      post "/api/v1/posts", params: valid_params, as: :json
+      login_and_get_token
+      post "/api/v1/posts", params: valid_params, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["title"]).to eq("New Post")
@@ -34,8 +43,8 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
 
     it "returns errors for invalid post" do
-      login
-      post "/api/v1/posts", params: { post: { title: "", body: "" } }, as: :json
+      login_and_get_token
+      post "/api/v1/posts", params: { post: { title: "", body: "" } }, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body["errors"]).to be_present
@@ -46,9 +55,10 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     let!(:post_record) { create(:post, title: "Original Title", slug: "original-title") }
 
     it "updates a post when authenticated" do
-      login
+      login_and_get_token
       patch "/api/v1/posts/original-title",
             params: { post: { title: "Updated Title" } },
+            headers: auth_headers,
             as: :json
 
       expect(response).to have_http_status(:ok)
@@ -66,8 +76,8 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     let!(:post_record) { create(:post, title: "To Delete", slug: "to-delete") }
 
     it "deletes a post when authenticated" do
-      login
-      delete "/api/v1/posts/to-delete", as: :json
+      login_and_get_token
+      delete "/api/v1/posts/to-delete", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:no_content)
       expect(Post.find_by(slug: "to-delete")).to be_nil

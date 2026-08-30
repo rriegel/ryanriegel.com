@@ -21,6 +21,16 @@ class ApplicationController < ActionController::API
     end
   end
 
+  def optional_authenticate_user!
+    token = extract_token
+    return unless token
+
+    decoded = decode_jwt(token)
+    if decoded && decoded[:user_id]
+      @current_user = User.find_by(id: decoded[:user_id])
+    end
+  end
+
   def current_user
     @current_user
   end

@@ -7,6 +7,15 @@ RSpec.describe "API::Tags Write Operations", type: :request do
     post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
   end
 
+  def login_and_get_token
+    login
+    @auth_token = response.parsed_body.dig("data", "token")
+  end
+
+  def auth_headers
+    { "Authorization" => "Bearer #{@auth_token}" }
+  end
+
   describe "POST /api/v1/tags" do
     let(:valid_params) do
       {
@@ -18,8 +27,8 @@ RSpec.describe "API::Tags Write Operations", type: :request do
     end
 
     it "creates a tag when authenticated" do
-      login
-      post "/api/v1/tags", params: valid_params, as: :json
+      login_and_get_token
+      post "/api/v1/tags", params: valid_params, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["name"]).to eq("Ruby")
@@ -37,9 +46,10 @@ RSpec.describe "API::Tags Write Operations", type: :request do
     let!(:tag) { create(:tag, name: "Old Tag", slug: "old-tag") }
 
     it "updates a tag when authenticated" do
-      login
+      login_and_get_token
       patch "/api/v1/tags/old-tag",
             params: { tag: { name: "New Tag" } },
+            headers: auth_headers,
             as: :json
 
       expect(response).to have_http_status(:ok)
@@ -57,8 +67,8 @@ RSpec.describe "API::Tags Write Operations", type: :request do
     let!(:tag) { create(:tag, name: "To Delete", slug: "to-delete") }
 
     it "deletes a tag when authenticated" do
-      login
-      delete "/api/v1/tags/to-delete", as: :json
+      login_and_get_token
+      delete "/api/v1/tags/to-delete", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:no_content)
       expect(Tag.find_by(slug: "to-delete")).to be_nil

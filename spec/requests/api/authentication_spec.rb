@@ -18,7 +18,7 @@ RSpec.describe "Authentication", type: :request do
       post "/api/v1/register", params: valid_params, as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response.cookies["auth_token"]).to be_present
+      expect(response.parsed_body["data"]["token"]).to be_present
       expect(response.parsed_body["data"]["user"]["email"]).to eq("newuser@example.com")
     end
 
@@ -38,7 +38,7 @@ RSpec.describe "Authentication", type: :request do
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response.cookies["auth_token"]).to be_present
+      expect(response.parsed_body["data"]["token"]).to be_present
       expect(response.parsed_body["data"]["user"]["email"]).to eq(user.email)
     end
 
@@ -55,7 +55,8 @@ RSpec.describe "Authentication", type: :request do
 
     it "logs out successfully" do
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      delete "/api/v1/logout", as: :json
+      token = response.parsed_body["data"]["token"]
+      delete "/api/v1/logout", headers: { "Authorization" => "Bearer #{token}" }, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]["message"]).to eq("Logged out successfully.")
