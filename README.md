@@ -42,7 +42,7 @@ Run `make help` for all available commands.
 docker run -d \
   --name ryanriegel-com-db \
   -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=*** \
+  -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=ryanriegel_com_development \
   -p 5434:5432 \
   postgres:16-alpine
