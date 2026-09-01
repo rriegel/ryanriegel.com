@@ -13,7 +13,17 @@ export default defineConfig({
   },
   vite: {
     server: {
-      allowedHosts: true
-    }
-  }
+      allowedHosts: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+        '/rails/active_storage': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        },
+      },
+    },
+  },
 });
