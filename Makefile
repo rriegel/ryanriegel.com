@@ -38,7 +38,7 @@ db:
 # Start Rails backend
 backend:
 	@echo "Starting Rails server..."
-	@bundle exec rails server &
+	@RAILS_ENV=development bundle exec rails server &
 	@echo "Rails starting on port 3000..."
 	@sleep 2
 

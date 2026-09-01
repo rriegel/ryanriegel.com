@@ -63,6 +63,7 @@ if (hasAuthCookie(Astro)) {
         const password = (document.getElementById('password') as HTMLInputElement).value;
 
         try {
+          console.log('[LOGIN] Submitting login for:', email);
           const res = await fetch('/api/v1/login', {
             method: 'POST',
             credentials: 'include',
@@ -72,15 +73,22 @@ if (hasAuthCookie(Astro)) {
             body: JSON.stringify({ user: { email, password } }),
           });
 
+          console.log('[LOGIN] Response status:', res.status);
+          console.log('[LOGIN] Response headers:', Object.fromEntries(res.headers.entries()));
+          
           const data = await res.json();
+          console.log('[LOGIN] Response data:', data);
 
           if (res.ok) {
+            console.log('[LOGIN] Login successful, redirecting to /admin');
             window.location.href = '/admin';
           } else {
+            console.log('[LOGIN] Login failed:', data.error);
             errorDiv.textContent = data.error || 'Invalid email or password';
             errorDiv.hidden = false;
           }
         } catch (error) {
+          console.log('[LOGIN] Connection error:', error);
           errorDiv.textContent = 'Connection error. Please try again.';
           errorDiv.hidden = false;
         } finally {

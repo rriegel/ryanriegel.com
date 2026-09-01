@@ -4,7 +4,13 @@ import { hasAuthCookie, getAuthToken } from '../../lib/admin-auth';
 import type { PostsResponse } from '../../lib/api';
 
 // Auth check — redirect to login if no cookie
+console.log('[ADMIN INDEX] Checking auth cookie...');
+console.log('[ADMIN INDEX] hasAuthCookie:', hasAuthCookie(Astro));
+console.log('[ADMIN INDEX] getAuthToken:', getAuthToken(Astro));
+console.log('[ADMIN INDEX] Raw cookie header:', Astro.request.headers.get('cookie'));
+
 if (!hasAuthCookie(Astro)) {
+  console.log('[ADMIN INDEX] No auth cookie, redirecting to login');
   return Astro.redirect('/admin/login');
 }
 
@@ -24,13 +30,23 @@ try {
     url += `&status=${status}`;
   }
 
+  // Forward the raw cookie header to preserve the exact cookie value
+  // (Astro's cookies.get() may transform the value, breaking Rails' signed cookie verification)
+  const cookieHeader = Astro.request.headers.get('cookie') || '';
+  console.log('[ADMIN INDEX] Fetching posts from:', url);
+  console.log('[ADMIN INDEX] Sending cookie header:', cookieHeader);
+  
   const res = await fetch(url, {
     headers: {
-      Cookie: `auth_token=${getAuthToken(Astro)}`,
+      Cookie: cookieHeader,
     },
   });
 
+  console.log('[ADMIN INDEX] Rails API response status:', res.status);
+  console.log('[ADMIN INDEX] Rails API response headers:', Object.fromEntries(res.headers.entries()));
+
   if (res.status === 401) {
+    console.log('[ADMIN INDEX] Got 401 from Rails, deleting cookie and redirecting to login');
     Astro.cookies.delete('auth_token', { path: '/' });
     return Astro.redirect('/admin/login');
   }
@@ -456,6 +472,10 @@ const meta = postsData?.meta;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .modal[hidden] {
+    display: none;
   }
 
   .modal-overlay {
