@@ -54,6 +54,28 @@ RSpec.describe "API::Uploads", type: :request do
         expect(response.parsed_body["signed_id"]).to eq(blob.signed_id)
       end
 
+      it "returns 400 when the blob JSON payload has no usable id" do
+        post "/api/v1/uploads/create_blob",
+          params: { blob_id: { filename: "orphan.webp" } }, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "returns 404 for a valid signed id whose blob no longer exists" do
+        blob = ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("doomed content"),
+          filename: "deleted.png",
+          content_type: "image/png"
+        )
+        signed_id = blob.signed_id
+        blob.purge
+
+        post "/api/v1/uploads/create_blob",
+          params: { blob_id: signed_id }, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
+
       it "returns 404 for an unknown numeric id" do
         post "/api/v1/uploads/create_blob",
           params: { blob_id: 999_999_999 }, headers: auth_headers, as: :json
@@ -81,6 +103,27 @@ RSpec.describe "API::Uploads", type: :request do
 
         expect(response).to have_http_status(:unauthorized)
       end
+    end
+  end
+
+  describe "rails_blob_url" do
+    it "uses ASSET_HOST for the blob URL in production" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("test image content"),
+        filename: "prod.png",
+        content_type: "image/png"
+      )
+
+      controller = Api::V1::UploadsController.new
+      allow(Rails.env).to receive(:production?).and_return(true)
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ASSET_HOST").and_return("cdn.example.com")
+
+      url = controller.send(:rails_blob_url, blob)
+
+      expect(url).to include("cdn.example.com")
+      expect(url).to include(blob.key)
+      expect(url).not_to include("example.com:3000")
     end
   end
 end
