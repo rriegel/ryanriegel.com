@@ -97,6 +97,9 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          # Full history so `undercover` can diff against origin/main
+          fetch-depth: 0
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -120,6 +123,9 @@ jobs:
           DATABASE_USERNAME: postgres
           DATABASE_PASSWORD: postgres
         run: bundle exec rspec
+
+      - name: Fail if changed code lacks test coverage
+        run: bundle exec undercover --compare origin/main
 
   frontend_test:
     runs-on: ubuntu-latest
