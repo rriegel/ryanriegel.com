@@ -66,7 +66,8 @@ describe('API Client', () => {
       const result = await getPosts();
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?page=1&per_page=10')
+        expect.stringContaining('/api/v1/posts?page=1&per_page=10'),
+        { credentials: 'include' }
       );
       expect(result).toEqual(mockPostsResponse);
     });
@@ -80,7 +81,8 @@ describe('API Client', () => {
       await getPosts(2, 20);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?page=2&per_page=20')
+        expect.stringContaining('/api/v1/posts?page=2&per_page=20'),
+        { credentials: 'include' }
       );
     });
 
@@ -105,7 +107,8 @@ describe('API Client', () => {
       const result = await getPost('test-post');
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts/test-post')
+        expect.stringContaining('/api/v1/posts/test-post'),
+        { credentials: 'include' }
       );
       expect(result).toEqual(mockPost);
     });
@@ -131,7 +134,8 @@ describe('API Client', () => {
       const result = await getCategories();
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/categories')
+        expect.stringContaining('/api/v1/categories'),
+        { credentials: 'include' }
       );
       expect(result).toEqual([mockCategory]);
     });
@@ -147,7 +151,8 @@ describe('API Client', () => {
       const result = await getTags();
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/tags')
+        expect.stringContaining('/api/v1/tags'),
+        { credentials: 'include' }
       );
       expect(result).toEqual([mockTag]);
     });
@@ -163,7 +168,8 @@ describe('API Client', () => {
       const result = await getPostsByCategory(1);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?category_id=1&page=1')
+        expect.stringContaining('/api/v1/posts?category_id=1&page=1'),
+        { credentials: 'include' }
       );
       expect(result).toEqual(mockPostsResponse);
     });
@@ -177,7 +183,8 @@ describe('API Client', () => {
       await getPostsByCategory(1, 3);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?category_id=1&page=3')
+        expect.stringContaining('/api/v1/posts?category_id=1&page=3'),
+        { credentials: 'include' }
       );
     });
   });
@@ -192,7 +199,8 @@ describe('API Client', () => {
       const result = await getPostsByTag(1);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?tag_id=1&page=1')
+        expect.stringContaining('/api/v1/posts?tag_id=1&page=1'),
+        { credentials: 'include' }
       );
       expect(result).toEqual(mockPostsResponse);
     });
@@ -206,7 +214,8 @@ describe('API Client', () => {
       await getPostsByTag(1, 2);
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/posts?tag_id=1&page=2')
+        expect.stringContaining('/api/v1/posts?tag_id=1&page=2'),
+        { credentials: 'include' }
       );
     });
   });

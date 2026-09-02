@@ -29,6 +29,9 @@ module RyanriegelCom
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Add cookie middleware for API-only mode (required for cookies.signed)
+    config.middleware.use ActionDispatch::Cookies
+
     # Limit request body size to 1MB to prevent DoS attacks
     config.action_dispatch.max_request_size = 1.megabyte
   end
