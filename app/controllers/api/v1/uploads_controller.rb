@@ -45,7 +45,11 @@ class Api::V1::UploadsController < ApplicationController
     else
       ActiveStorage::Blob.find_signed(raw)
     end
-  rescue ActiveStorage::Blob::SignedIdNotFound, ActiveRecord::RecordNotFound
+  rescue ActiveStorage::Blob::SignedIdNotFound
+    # Malformed identifier — re-raise so create_blob maps it to 400
+    raise
+  rescue ActiveRecord::RecordNotFound
+    # Well-formed reference to a nonexistent blob → 404
     nil
   end
 
