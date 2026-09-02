@@ -13,6 +13,11 @@ const { posts, showExcerpt = true } = Astro.props;
   {posts.map((post) => (
     <li>
       <article>
+        {post.cover_image && (
+          <a href={`/blog/${post.slug}`} class="cover-link">
+            <img src={post.cover_image} alt={post.title} class="cover-image" />
+          </a>
+        )}
         <h2><a href={`/blog/${post.slug}`}>{post.title}</a></h2>
         <div class="meta">
           {post.published_at && (
@@ -56,6 +61,24 @@ const { posts, showExcerpt = true } = Astro.props;
 
   .post-list li:last-child {
     border-bottom: none;
+  }
+
+  .cover-link {
+    display: block;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .cover-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.2s;
+  }
+
+  .cover-link:hover .cover-image {
+    transform: scale(1.02);
   }
 
   .post-list h2 {

@@ -1,10 +1,19 @@
 require "rails_helper"
 
 RSpec.describe "API::Categories Write Operations", type: :request do
-  let(:user) { create(:user) }
-  let(:auth_headers) do
+  let(:user) { create(:user, password: "password123", password_confirmation: "password123") }
+
+  def login
     post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-    { "Authorization" => response.headers["Authorization"] }
+  end
+
+  def login_and_get_token
+    login
+    @auth_token = response.parsed_body.dig("data", "token")
+  end
+
+  def auth_headers
+    { "Authorization" => "Bearer #{@auth_token}" }
   end
 
   describe "POST /api/v1/categories" do
@@ -18,6 +27,7 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     end
 
     it "creates a category when authenticated" do
+      login_and_get_token
       post "/api/v1/categories", params: valid_params, headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
@@ -36,6 +46,7 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     let!(:category) { create(:category, name: "Old Name", slug: "old-name") }
 
     it "updates a category when authenticated" do
+      login_and_get_token
       patch "/api/v1/categories/old-name",
             params: { category: { name: "New Name" } },
             headers: auth_headers,
@@ -56,6 +67,7 @@ RSpec.describe "API::Categories Write Operations", type: :request do
     let!(:category) { create(:category, name: "To Delete", slug: "to-delete") }
 
     it "deletes a category when authenticated" do
+      login_and_get_token
       delete "/api/v1/categories/to-delete", headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:no_content)

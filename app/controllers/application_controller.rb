@@ -1,13 +1,14 @@
 class ApplicationController < ActionController::API
   include Devise::Controllers::Helpers
   include ActionController::MimeResponds
+  include ActionController::Cookies
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :validate_content_type, if: -> { request.post? || request.put? || request.patch? }
 
   protected
 
   def authenticate_user!
-    token = extract_token_from_header
+    token = extract_token
     if token
       decoded = decode_jwt(token)
       if decoded && decoded[:user_id]
@@ -19,6 +20,17 @@ class ApplicationController < ActionController::API
       render json: { error: "Not authenticated" }, status: :unauthorized
     end
   end
+
+  def optional_authenticate_user!
+    token = extract_token
+    return unless token
+
+    decoded = decode_jwt(token)
+    if decoded && decoded[:user_id]
+      @current_user = User.find_by(id: decoded[:user_id])
+    end
+  end
+
   def current_user
     @current_user
   end
@@ -38,7 +50,11 @@ class ApplicationController < ActionController::API
 
   private
 
-  def extract_token_from_header
+  def extract_token
+    # Try cookie first, then fall back to Authorization header for backwards compatibility
+    token = cookies.signed[:auth_token]
+    return token if token.present?
+
     header = request.headers["Authorization"]
     return nil unless header&.start_with?("Bearer ")
 

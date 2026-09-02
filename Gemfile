@@ -68,6 +68,9 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 
+  # Code coverage reporting [https://github.com/simplecov-ruby/simplecov]
+  gem "simplecov", require: false
+
   # Database cleaner for test isolation
   gem "database_cleaner-active_record"
 

@@ -42,7 +42,7 @@ Run `make help` for all available commands.
 docker run -d \
   --name ryanriegel-com-db \
   -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=*** \
+  -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=ryanriegel_com_development \
   -p 5434:5432 \
   postgres:16-alpine
@@ -196,6 +196,75 @@ The test suite includes:
 - Model specs (validations, associations, scopes)
 - Request specs (API endpoints)
 - Factory definitions for test data
+
+## Seed Data
+
+The seeds file creates realistic test data for local development — categories, tags, published/draft posts, and an admin user.
+
+### Create seed data
+
+```bash
+bin/rails db:seed
+```
+
+This is idempotent — running it multiple times won't create duplicates (uses `find_or_create_by!`).
+
+### Reset everything (drop, recreate, seed)
+
+```bash
+bin/rails db:seed:reseed
+```
+
+This runs `db:drop`, `db:create`, `db:migrate`, and `db:seed` in sequence. Use this when you want a clean slate.
+
+### Remove seed data without dropping the database
+
+```bash
+bin/rails db:seed:destroy
+```
+
+This deletes all seeded records (posts, tags, categories, users) while preserving your database and migrations.
+
+### What gets seeded
+
+| Resource   | Count | Details                                                        |
+|------------|-------|----------------------------------------------------------------|
+| User       | 1     | `admin@example.com` / `admin!!1`                                 |
+| Categories | 5     | Engineering, DevOps, Ruby on Rails, JavaScript, Personal       |
+| Tags       | 14    | ruby, rails, typescript, astro, docker, aws, testing, etc.     |
+| Posts      | 25    | 21 published + 4 drafts, with realistic HTML body content      |
+
+### Adding test media
+
+Drop test media files in `db/seeds/media/`:
+
+```
+db/seeds/media/
+├── cover_images/     # 6 cover images (cover-01.jpg through cover-06.jpg)
+│   ├── cover-01.jpg  # 1200x630px recommended (16:9)
+│   ├── cover-02.jpg
+│   └── ...
+├── inline/           # Inline media for post bodies
+│   ├── image-01.jpg
+│   ├── video-01.mp4
+│   └── audio-01.mp3
+└── README.md
+```
+
+The seed script automatically attaches cover images to posts 1, 3, 5, 8, 10, and 13. If files don't exist, they're skipped gracefully.
+
+See `db/seeds/media/README.md` for details.
+
+### Admin login
+
+After seeding, use these credentials to authenticate via the API:
+
+```bash
+# Get a JWT token
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password": "***"}'
+```
 
 ## Project Structure
 

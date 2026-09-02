@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Authentication", type: :request do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, password: "password123", password_confirmation: "password123") }
 
   describe "POST /api/v1/register" do
     let(:valid_params) do
@@ -14,11 +14,11 @@ RSpec.describe "Authentication", type: :request do
       }
     end
 
-    it "creates a new user and returns JWT token" do
+    it "creates a new user and sets auth cookie" do
       post "/api/v1/register", params: valid_params, as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response.headers["Authorization"]).to be_present
+      expect(response.parsed_body["data"]["token"]).to be_present
       expect(response.parsed_body["data"]["user"]["email"]).to eq("newuser@example.com")
     end
 
@@ -34,11 +34,11 @@ RSpec.describe "Authentication", type: :request do
   describe "POST /api/v1/login" do
     before { user }
 
-    it "returns JWT token for valid credentials" do
+    it "sets auth cookie for valid credentials" do
       post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(response.headers["Authorization"]).to be_present
+      expect(response.parsed_body["data"]["token"]).to be_present
       expect(response.parsed_body["data"]["user"]["email"]).to eq(user.email)
     end
 
@@ -51,13 +51,12 @@ RSpec.describe "Authentication", type: :request do
   end
 
   describe "DELETE /api/v1/logout" do
-    let(:auth_headers) do
-      post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
-      { "Authorization" => response.headers["Authorization"] }
-    end
+    before { user }
 
     it "logs out successfully" do
-      delete "/api/v1/logout", headers: auth_headers, as: :json
+      post "/api/v1/login", params: { user: { email: user.email, password: "password123" } }, as: :json
+      token = response.parsed_body["data"]["token"]
+      delete "/api/v1/logout", headers: { "Authorization" => "Bearer #{token}" }, as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["status"]["message"]).to eq("Logged out successfully.")

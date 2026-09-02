@@ -24,6 +24,7 @@ const mockPost: Post = {
   body: 'Test body content',
   status: 'published',
   published_at: '2024-01-01T00:00:00Z',
+  cover_image: null,
   category: { name: 'Tech', slug: 'tech' },
   tags: [{ name: 'JavaScript', slug: 'javascript' }],
 };
