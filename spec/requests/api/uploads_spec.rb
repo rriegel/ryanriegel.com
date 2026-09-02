@@ -95,6 +95,22 @@ RSpec.describe "API::Uploads", type: :request do
 
         expect(response).to have_http_status(:bad_request)
       end
+
+      it "returns 400 when an unexpected error occurs during lookup" do
+        blob = ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("test image content"),
+          filename: "boom.png",
+          content_type: "image/png"
+        )
+
+        allow(ActiveStorage::Blob).to receive(:find_by).and_raise(StandardError, "kaboom")
+
+        post "/api/v1/uploads/create_blob",
+          params: { blob_id: blob.id }, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:bad_request)
+        expect(response.parsed_body["error"]).to eq("Blob lookup failed")
+      end
     end
 
     context "when not authenticated" do

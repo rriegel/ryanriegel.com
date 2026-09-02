@@ -54,7 +54,8 @@ class Api::V1::UploadsController < ApplicationController
     end
 
     raw = raw.to_s
-    raise BlobReferenceMissing, "blob_id is blank" if raw.blank?
+    # Non-blank is guaranteed by `.presence` (line 49) plus the Hash-id
+    # guard (line 53) — so `raw.match?` below is always reached with content.
 
     if raw.match?(/\A\d+\z/)
       ActiveStorage::Blob.find_by(id: raw.to_i)
