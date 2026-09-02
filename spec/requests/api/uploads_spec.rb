@@ -121,9 +121,9 @@ RSpec.describe "API::Uploads", type: :request do
 
       url = controller.send(:rails_blob_url, blob)
 
-      expect(url).to include("cdn.example.com")
-      expect(url).to include(blob.key)
-      expect(url).not_to include("example.com:3000")
+      expect(url).to start_with("http://cdn.example.com/rails/active_storage/blobs/redirect/")
+      expect(url).to include(blob.signed_id)
+      expect(url).to end_with("/prod.png")
     end
   end
 end

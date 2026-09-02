@@ -11,11 +11,12 @@ class Api::V1::UploadsController < ApplicationController
   #
   # Accepts any of: numeric blob id, signed id string, or the raw blob JSON
   # returned by DirectUpload#create.
+  #
+  # Status semantics:
+  #   400 — missing/blank/malformed reference (client sent garbage)
+  #   404 — well-formed reference that does not resolve to a blob
   def create_blob
-    raw = params[:blob_id].presence || params[:blob].presence
-    return render json: { error: "blob_id is required" }, status: :bad_request if raw.blank?
-
-    blob = find_blob(raw)
+    blob = find_blob!
     return render json: { error: "Blob not found" }, status: :not_found unless blob
 
     render json: {
@@ -25,6 +26,11 @@ class Api::V1::UploadsController < ApplicationController
       content_type: blob.content_type,
       byte_size: blob.byte_size
     }
+  rescue BlobReferenceMissing => e
+    render json: { error: e.message }, status: :bad_request
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    Rails.logger.info("[UPLOADS] create_blob: invalid signature on blob reference")
+    render json: { error: "Invalid blob reference" }, status: :bad_request
   rescue StandardError => e
     Rails.logger.error("[UPLOADS] create_blob failed: #{e.class}: #{e.message}")
     render json: { error: "Blob lookup failed" }, status: :bad_request
@@ -32,13 +38,23 @@ class Api::V1::UploadsController < ApplicationController
 
   private
 
-  def find_blob(raw)
+  # Raised when the request carries no usable blob reference at all.
+  class BlobReferenceMissing < StandardError; end
+
+  # Resolves the request's blob reference to an ActiveStorage::Blob.
+  # Raises BlobReferenceMissing when nothing usable was supplied;
+  # raises InvalidSignature / RecordNotFound for unresolvable references.
+  def find_blob!
+    raw = params[:blob_id].presence || params[:blob].presence
+    raise BlobReferenceMissing, "blob_id is required" if raw.blank?
+
     if raw.is_a?(ActionController::Parameters) || raw.is_a?(Hash)
       raw = raw["signed_id"].presence || raw["id"]
+      raise BlobReferenceMissing, "blob_id has no signed_id or id" if raw.blank?
     end
 
     raw = raw.to_s
-    return nil if raw.blank?
+    raise BlobReferenceMissing, "blob_id is blank" if raw.blank?
 
     if raw.match?(/\A\d+\z/)
       ActiveStorage::Blob.find_by(id: raw.to_i)
@@ -47,12 +63,6 @@ class Api::V1::UploadsController < ApplicationController
       # find_signed would silently return nil and we'd wrongly 404
       ActiveStorage::Blob.find_signed!(raw)
     end
-  rescue ActiveSupport::MessageVerifier::InvalidSignature
-    # Malformed identifier — re-raise so create_blob maps it to 400
-    raise
-  rescue ActiveRecord::RecordNotFound
-    # Well-formed reference to a nonexistent blob → 404
-    nil
   end
 
   def rails_blob_url(blob)
