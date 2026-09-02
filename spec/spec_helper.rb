@@ -2,6 +2,17 @@
 
 # Start SimpleCov BEFORE anything else loads so all app code is tracked
 require "simplecov"
+require "undercover/simplecov_formatter"
+
+# HTML report for humans (coverage/index.html) + JSON report for `undercover`
+# (diff coverage gate in CI reads coverage/coverage.json)
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
+  [
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::Undercover
+  ]
+)
+
 SimpleCov.start "rails" do
   enable_coverage :branch
 
