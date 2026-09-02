@@ -43,9 +43,11 @@ class Api::V1::UploadsController < ApplicationController
     if raw.match?(/\A\d+\z/)
       ActiveStorage::Blob.find_by(id: raw.to_i)
     else
-      ActiveStorage::Blob.find_signed(raw)
+      # find_signed! (unlike find_signed) raises on invalid signatures;
+      # find_signed would silently return nil and we'd wrongly 404
+      ActiveStorage::Blob.find_signed!(raw)
     end
-  rescue ActiveStorage::Blob::SignedIdNotFound
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
     # Malformed identifier — re-raise so create_blob maps it to 400
     raise
   rescue ActiveRecord::RecordNotFound
