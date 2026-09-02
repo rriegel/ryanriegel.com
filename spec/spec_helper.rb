@@ -1,3 +1,20 @@
+# frozen_string_literal: true
+
+# Start SimpleCov BEFORE anything else loads so all app code is tracked
+require "simplecov"
+SimpleCov.start "rails" do
+  enable_coverage :branch
+
+  add_filter "/spec/"
+  add_filter "/config/"
+  add_filter "/db/"
+
+  add_group "Models", "app/models"
+  add_group "Controllers", "app/controllers"
+  add_group "Jobs", "app/jobs"
+  add_group "Mailers", "app/mailers"
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
