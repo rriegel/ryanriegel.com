@@ -68,6 +68,13 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 
+  # Code coverage reporting [https://github.com/simplecov-ruby/simplecov]
+  gem "simplecov", require: false
+
+  # Fails CI when changed code in a diff lacks test coverage
+  # [https://github.com/grodowski/undercover]
+  gem "undercover", require: false
+
   # Database cleaner for test isolation
   gem "database_cleaner-active_record"
 
