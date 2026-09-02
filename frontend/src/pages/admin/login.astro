@@ -49,9 +49,9 @@ if (hasAuthCookie(Astro)) {
     </div>
 
     <script>
-      const form = document.getElementById('login-form');
-      const errorDiv = document.getElementById('error-message');
-      const submitBtn = document.getElementById('submit-btn');
+      const form = document.getElementById('login-form') as HTMLFormElement;
+      const errorDiv = document.getElementById('error-message') as HTMLElement;
+      const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();

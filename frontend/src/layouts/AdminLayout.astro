@@ -23,19 +23,19 @@ const { title, activeNav = 'dashboard' } = Astro.props;
           <a href="/admin" class="logo">Admin Panel</a>
         </div>
         <nav class="sidebar-nav">
-          <a href="/admin" class:active={activeNav === 'dashboard'}>
+          <a href="/admin" class:list={[activeNav === 'dashboard' && 'active']}>
             <span class="icon">📊</span>
             Dashboard
           </a>
-          <a href="/admin/posts" class:active={activeNav === 'posts'}>
+          <a href="/admin/posts" class:list={[activeNav === 'posts' && 'active']}>
             <span class="icon">📝</span>
             Posts
           </a>
-          <a href="/admin/categories" class:active={activeNav === 'categories'}>
+          <a href="/admin/categories" class:list={[activeNav === 'categories' && 'active']}>
             <span class="icon">📁</span>
             Categories
           </a>
-          <a href="/admin/tags" class:active={activeNav === 'tags'}>
+          <a href="/admin/tags" class:list={[activeNav === 'tags' && 'active']}>
             <span class="icon">🏷️</span>
             Tags
           </a>

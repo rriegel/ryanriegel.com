@@ -216,7 +216,7 @@ const meta = postsData?.meta;
   const modal = document.getElementById('delete-modal');
   const deleteTitle = document.getElementById('delete-post-title');
   const cancelBtn = document.getElementById('cancel-delete');
-  const confirmBtn = document.getElementById('confirm-delete');
+  const confirmBtn = document.getElementById('confirm-delete') as HTMLButtonElement | null;
   let deleteSlug: string | null = null;
 
   document.querySelectorAll('.delete-btn').forEach((btn) => {
@@ -239,7 +239,7 @@ const meta = postsData?.meta;
   });
 
   confirmBtn?.addEventListener('click', async () => {
-    if (!deleteSlug) return;
+    if (!deleteSlug || !confirmBtn) return;
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Deleting...';
 
