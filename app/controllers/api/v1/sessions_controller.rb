@@ -34,7 +34,7 @@ class Api::V1::SessionsController < ApplicationController
   private
 
   def set_auth_cookie(token)
-    is_secure = ENV.fetch('COOKIE_SECURE', Rails.env.production?).to_s == 'true'
+    is_secure = ENV.fetch("COOKIE_SECURE", Rails.env.production?).to_s == "true"
     Rails.logger.info "[AUTH] secret_key_base present: #{Rails.application.secret_key_base.present?}"
     Rails.logger.info "[AUTH] Setting auth_token cookie: secure=#{is_secure}, httponly=true, same_site=lax, path=/"
     cookies.signed[:auth_token] = {
