@@ -63,6 +63,12 @@ class Api::V1::UploadsController < ApplicationController
       # find_signed would silently return nil and we'd wrongly 404
       ActiveStorage::Blob.find_signed!(raw)
     end
+  rescue ActiveRecord::RecordNotFound
+    # Well-formed reference (valid signature) to a nonexistent blob →
+    # return nil so create_blob renders 404. Must be rescued HERE:
+    # otherwise it falls through to the controller's StandardError
+    # rescue and wrongly returns 400.
+    nil
   end
 
   def rails_blob_url(blob)
