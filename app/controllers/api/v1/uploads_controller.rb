@@ -12,7 +12,10 @@ class Api::V1::UploadsController < ApplicationController
   # Accepts any of: numeric blob id, signed id string, or the raw blob JSON
   # returned by DirectUpload#create.
   def create_blob
-    blob = find_blob
+    raw = params[:blob_id].presence || params[:blob].presence
+    return render json: { error: "blob_id is required" }, status: :bad_request if raw.blank?
+
+    blob = find_blob(raw)
     return render json: { error: "Blob not found" }, status: :not_found unless blob
 
     render json: {
@@ -29,10 +32,7 @@ class Api::V1::UploadsController < ApplicationController
 
   private
 
-  def find_blob
-    raw = params[:blob_id].presence || params[:blob].presence
-    return nil if raw.blank?
-
+  def find_blob(raw)
     if raw.is_a?(ActionController::Parameters) || raw.is_a?(Hash)
       raw = raw["signed_id"].presence || raw["id"]
     end

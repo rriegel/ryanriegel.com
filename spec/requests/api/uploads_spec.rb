@@ -10,7 +10,7 @@ RSpec.describe "API::Uploads", type: :request do
   describe "POST /api/v1/uploads/create_blob" do
     context "when authenticated" do
       it "returns signed_id and url for a numeric blob id" do
-        blob = ActiveStorage::Blob.create_after_upload!(
+        blob = ActiveStorage::Blob.create_and_upload!(
           io: StringIO.new("test image content"),
           filename: "test.png",
           content_type: "image/png"
@@ -27,7 +27,7 @@ RSpec.describe "API::Uploads", type: :request do
       end
 
       it "returns signed_id and url for a signed id string" do
-        blob = ActiveStorage::Blob.create_after_upload!(
+        blob = ActiveStorage::Blob.create_and_upload!(
           io: StringIO.new("test image content"),
           filename: "test.jpg",
           content_type: "image/jpeg"
@@ -41,7 +41,7 @@ RSpec.describe "API::Uploads", type: :request do
       end
 
       it "accepts the raw DirectUpload blob JSON payload" do
-        blob = ActiveStorage::Blob.create_after_upload!(
+        blob = ActiveStorage::Blob.create_and_upload!(
           io: StringIO.new("test image content"),
           filename: "test.webp",
           content_type: "image/webp"
