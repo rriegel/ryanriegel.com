@@ -1,0 +1,314 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { hasAuthCookie } from '../../../lib/admin-auth';
+
+// Auth check — redirect to login if no cookie
+if (!hasAuthCookie(Astro)) {
+  return Astro.redirect('/admin/login');
+}
+---
+
+<AdminLayout title="New Post" activeNav="posts">
+  <style is:global>
+    @import '../../../styles/admin-editor.css';
+  </style>
+  <div class="editor-page" data-mode="new">
+    <header class="editor-header">
+      <h2>New Post</h2>
+      <a href="/admin" class="btn-secondary">← Back to Dashboard</a>
+    </header>
+
+    <form id="post-form" class="post-form">
+      <div class="form-row">
+        <div class="form-group form-grow">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required placeholder="Post title" />
+        </div>
+      </div>
+
+      <div class="form-row form-row-split">
+        <div class="form-group">
+          <label for="slug">Slug <span class="hint">(auto-generated if blank)</span></label>
+          <input type="text" id="slug" name="slug" placeholder="my-post-slug" />
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category_id">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tags</label>
+        <div id="tag-input-mount"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Cover image</label>
+        <div id="media-uploader-mount"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="excerpt">Excerpt <span class="hint">(optional)</span></label>
+        <textarea id="excerpt" name="excerpt" rows="2" placeholder="Short summary for cards and previews"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Body</label>
+        <div id="post-editor-mount"></div>
+      </div>
+
+      <div id="form-error" class="form-error" hidden></div>
+
+      <div class="editor-actions">
+        <button type="submit" id="save-btn" class="btn-primary">Save Draft</button>
+        <button type="button" id="publish-btn" class="btn-success">Publish</button>
+        <span id="saving-indicator" class="saving" hidden>Saving…</span>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<script>
+  import { createRoot } from 'react-dom/client';
+  import { createElement } from 'react';
+  import PostEditor from '../../../components/editor/PostEditor';
+  import MediaUploader from '../../../components/editor/MediaUploader';
+  import TagInput from '../../../components/editor/TagInput';
+  import {
+    EMPTY_FORM,
+    buildPayload,
+    createPost,
+    createTag,
+    ApiError,
+    type PostFormData,
+  } from '../../../lib/post-form';
+  import { generateSlug } from '../../../lib/utils';
+
+  const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
+  const mount = document.querySelector('.editor-page[data-mode="new"]');
+  if (mount) {
+    const form = document.getElementById('post-form') as HTMLFormElement;
+    const titleInput = document.getElementById('title') as HTMLInputElement;
+    const slugInput = document.getElementById('slug') as HTMLInputElement;
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    const excerptInput = document.getElementById('excerpt') as HTMLTextAreaElement;
+    const errorDiv = document.getElementById('form-error') as HTMLElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const publishBtn = document.getElementById('publish-btn') as HTMLButtonElement;
+    const savingIndicator = document.getElementById('saving-indicator') as HTMLElement;
+
+    const formData: PostFormData = { ...EMPTY_FORM };
+
+    const setError = (msg: string | null) => {
+      if (msg) {
+        errorDiv.textContent = msg;
+        errorDiv.hidden = false;
+      } else {
+        errorDiv.hidden = true;
+      }
+    };
+
+    const setSaving = (saving: boolean) => {
+      saveBtn.disabled = saving;
+      publishBtn.disabled = saving;
+      savingIndicator.hidden = !saving;
+    };
+
+    // Auto-generate slug from title until the user edits it manually
+    titleInput.addEventListener('input', () => {
+      if (!formData.slugEdited) {
+        slugInput.value = generateSlug(titleInput.value);
+      }
+    });
+    slugInput.addEventListener('input', () => {
+      formData.slugEdited = slugInput.value.length > 0;
+    });
+
+    // Load categories
+    fetch(`${API_BASE}/api/v1/categories`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((cats: { id: number; name: string }[]) => {
+        for (const c of cats) {
+          const opt = document.createElement('option');
+          opt.value = String(c.id);
+          opt.textContent = c.name;
+          categorySelect.appendChild(opt);
+        }
+      })
+      .catch(() => {/* category list is optional */});
+
+    // Load tags
+    let availableTags: { id: number; name: string; slug: string }[] = [];
+    const tagRoot = createRoot(document.getElementById('tag-input-mount')!);
+    const renderTags = () => {
+      tagRoot.render(
+        createElement(TagInput, {
+          available: availableTags,
+          selected: formData.tagIds,
+          onChange: (ids: number[]) => {
+            formData.tagIds = ids;
+            renderTags();
+          },
+          onCreate: async (name: string) => {
+            const tag = await createTag(name);
+            availableTags = [...availableTags, tag];
+            return tag;
+          },
+        })
+      );
+    };
+    fetch(`${API_BASE}/api/v1/tags`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((tags: { id: number; name: string; slug: string }[]) => {
+        availableTags = tags;
+        renderTags();
+      })
+      .catch(() => renderTags());
+
+    // Cover image uploader
+    const mediaRoot = createRoot(document.getElementById('media-uploader-mount')!);
+    const renderMedia = () => {
+      mediaRoot.render(
+        createElement(MediaUploader, {
+          value: formData.coverImageSignedId,
+          previewUrl: formData.coverImageUrl,
+          onChange: (signedId, url) => {
+            formData.coverImageSignedId = signedId;
+            formData.coverImageUrl = url;
+            renderMedia();
+          },
+        })
+      );
+    };
+    renderMedia();
+
+    // TipTap editor
+    const editorRoot = createRoot(document.getElementById('post-editor-mount')!);
+    editorRoot.render(
+      createElement(PostEditor, {
+        onChange: (html: string) => {
+          formData.bodyHtml = html;
+        },
+      })
+    );
+
+    const submit = async (status: 'draft' | 'published') => {
+      formData.title = titleInput.value.trim();
+      formData.slug = slugInput.value.trim();
+      formData.categoryId = categorySelect.value;
+      formData.status = status;
+      formData.excerpt = excerptInput.value;
+
+      if (!formData.title) {
+        setError('Title is required.');
+        return;
+      }
+      if (!formData.bodyHtml || formData.bodyHtml === '<p></p>') {
+        setError('Post body is required.');
+        return;
+      }
+
+      setError(null);
+      setSaving(true);
+      try {
+        await createPost(buildPayload(formData));
+        window.location.href = '/admin';
+      } catch (err) {
+        setSaving(false);
+        if (err instanceof ApiError) {
+          setError(err.errors?.join(' · ') || err.message);
+        } else {
+          setError('Connection error. Please try again.');
+        }
+      }
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void submit('draft');
+    });
+    publishBtn.addEventListener('click', () => void submit('published'));
+  }
+</script>
+
+<style>
+  .editor-page {
+    max-width: 900px;
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .editor-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .post-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+  }
+
+  .form-row {
+    margin-bottom: 1rem;
+  }
+
+  .form-row-split {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-grow {
+    flex: 1;
+  }
+
+  .hint {
+    color: var(--color-text-muted);
+    font-weight: 400;
+    font-size: 0.8rem;
+  }
+
+  .form-error {
+    background: #fee;
+    color: var(--color-error);
+    border: 1px solid #fcc;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .saving {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    .form-row-split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

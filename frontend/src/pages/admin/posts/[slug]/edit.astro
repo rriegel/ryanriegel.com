@@ -1,0 +1,448 @@
+---
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { hasAuthCookie } from '../../../../lib/admin-auth';
+
+const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
+const slug = Astro.params.slug as string;
+
+// Auth check — redirect to login if no cookie
+if (!hasAuthCookie(Astro)) {
+  return Astro.redirect('/admin/login');
+}
+
+const cookieHeader = Astro.request.headers.get('cookie') || '';
+
+interface AdminPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string | null;
+  status: string;
+  published_at: string | null;
+  lock_version: number;
+  cover_image: string | null;
+  category: { name: string; slug: string } | null;
+  tags: { name: string; slug: string }[];
+}
+
+let post: AdminPost | null = null;
+let loadError: string | null = null;
+
+try {
+  const res = await fetch(`${API_BASE}/api/v1/posts/${encodeURIComponent(slug)}`, {
+    headers: { Cookie: cookieHeader },
+  });
+
+  if (res.status === 401) {
+    Astro.cookies.delete('auth_token', { path: '/' });
+    return Astro.redirect('/admin/login');
+  }
+  if (res.status === 404) {
+    loadError = 'Post not found.';
+  } else if (!res.ok) {
+    loadError = `Failed to load post (${res.status})`;
+  } else {
+    post = (await res.json()) as AdminPost;
+  }
+} catch {
+  loadError = 'Could not connect to the API server';
+}
+
+if (!post && !loadError) {
+  loadError = 'Post not found.';
+}
+---
+
+<AdminLayout title={post ? `Edit: ${post.title}` : 'Edit Post'} activeNav="posts">
+  <style is:global>
+    @import '../../../../styles/admin-editor.css';
+  </style>
+  {loadError ? (
+    <div class="editor-page">
+      <div class="load-error" role="alert">
+        <p>{loadError}</p>
+        <a href="/admin" class="btn-primary">← Back to Dashboard</a>
+      </div>
+    </div>
+  ) : post ? (
+    <div
+      class="editor-page"
+      data-mode="edit"
+      data-slug={post.slug}
+      data-lock-version={post.lock_version}
+      data-initial-title={post.title}
+      data-initial-slug={post.slug}
+      data-initial-category={post.category?.name ?? ''}
+      data-initial-status={post.status}
+      data-initial-excerpt={post.excerpt ?? ''}
+      data-initial-body={post.body ?? ''}
+      data-initial-published-at={post.published_at ?? ''}
+      data-initial-tags={post.tags.map((t) => t.name).join(',')}
+      data-initial-cover={post.cover_image ?? ''}
+    >
+      <header class="editor-header">
+        <h2>Edit Post</h2>
+        <div class="header-actions">
+          <a href={`/blog/${post.slug}`} class="btn-secondary" target="_blank" rel="noopener">
+            View on site ↗
+          </a>
+          <a href="/admin" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+      </header>
+
+      <form id="post-form" class="post-form">
+        <div class="form-row">
+          <div class="form-group form-grow">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required />
+          </div>
+        </div>
+
+        <div class="form-row form-row-split">
+          <div class="form-group">
+            <label for="slug">Slug <span class="warning-hint">(changing breaks links)</span></label>
+            <input type="text" id="slug" name="slug" />
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category_id">
+              <option value="">— None —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tags</label>
+          <div id="tag-input-mount"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Cover image</label>
+          <div id="media-uploader-mount"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="excerpt">Excerpt <span class="hint">(optional)</span></label>
+          <textarea id="excerpt" name="excerpt" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Body</label>
+          <div id="post-editor-mount"></div>
+        </div>
+
+        <div id="form-error" class="form-error" hidden></div>
+
+        <div class="editor-actions">
+          <button type="submit" id="save-btn" class="btn-primary">Save</button>
+          <span id="saving-indicator" class="saving" hidden>Saving…</span>
+        </div>
+      </form>
+    </div>
+  ) : null}
+</AdminLayout>
+
+<script>
+  import { createRoot } from 'react-dom/client';
+  import { createElement } from 'react';
+  import PostEditor from '../../../../components/editor/PostEditor';
+  import MediaUploader from '../../../../components/editor/MediaUploader';
+  import TagInput from '../../../../components/editor/TagInput';
+  import {
+    EMPTY_FORM,
+    buildPayload,
+    updatePost,
+    createTag,
+    ApiError,
+    type PostFormData,
+  } from '../../../../lib/post-form';
+  import { generateSlug } from '../../../../lib/utils';
+
+  const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
+  const mount = document.querySelector('.editor-page[data-mode="edit"]') as HTMLElement | null;
+  if (mount) {
+    const originalSlug = mount.dataset.slug as string;
+    const lockVersion = Number(mount.dataset.lockVersion || '0');
+
+    const form = document.getElementById('post-form') as HTMLFormElement;
+    const titleInput = document.getElementById('title') as HTMLInputElement;
+    const slugInput = document.getElementById('slug') as HTMLInputElement;
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    const statusSelect = document.getElementById('status') as HTMLSelectElement;
+    const excerptInput = document.getElementById('excerpt') as HTMLTextAreaElement;
+    const errorDiv = document.getElementById('form-error') as HTMLElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const savingIndicator = document.getElementById('saving-indicator') as HTMLElement;
+
+    const formData: PostFormData = {
+      ...EMPTY_FORM,
+      title: mount.dataset.initialTitle || '',
+      slug: mount.dataset.initialSlug || '',
+      slugEdited: true, // existing posts keep their slug; edits are deliberate
+      status: (mount.dataset.initialStatus as 'draft' | 'published') || 'draft',
+      excerpt: mount.dataset.initialExcerpt || '',
+      bodyHtml: mount.dataset.initialBody || '',
+    };
+
+    const setError = (msg: string | null) => {
+      if (msg) {
+        errorDiv.textContent = msg;
+        errorDiv.hidden = false;
+      } else {
+        errorDiv.hidden = true;
+      }
+    };
+
+    const setSaving = (saving: boolean) => {
+      saveBtn.disabled = saving;
+      savingIndicator.hidden = !saving;
+    };
+
+    // Pre-populate fields
+    titleInput.value = formData.title;
+    slugInput.value = formData.slug;
+    statusSelect.value = formData.status;
+    excerptInput.value = formData.excerpt;
+
+    titleInput.addEventListener('input', () => {
+      formData.title = titleInput.value;
+    });
+    slugInput.addEventListener('input', () => {
+      formData.slug = slugInput.value;
+    });
+    slugInput.addEventListener('blur', () => {
+      // Warn if slug diverges from title-derived slug
+      const derived = generateSlug(formData.title);
+      if (formData.slug && derived && formData.slug !== derived) {
+        slugInput.setCustomValidity(
+          'Custom slug — this changes the public URL of the post.'
+        );
+        slugInput.title = 'Custom slug — this changes the public URL of the post.';
+      } else {
+        slugInput.setCustomValidity('');
+      }
+    });
+
+    // Load categories and select the post's current one by name
+    const currentCategoryName = mount.dataset.initialCategory || '';
+    fetch(`${API_BASE}/api/v1/categories`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((cats: { id: number; name: string }[]) => {
+        for (const c of cats) {
+          const opt = document.createElement('option');
+          opt.value = String(c.id);
+          opt.textContent = c.name;
+          if (c.name === currentCategoryName) opt.selected = true;
+          categorySelect.appendChild(opt);
+        }
+        categorySelect.value = categorySelect.value; // keep "" default if none matched
+      })
+      .catch(() => {/* category list is optional */});
+
+    categorySelect.addEventListener('change', () => {
+      formData.categoryId = categorySelect.value;
+    });
+    statusSelect.addEventListener('change', () => {
+      formData.status = statusSelect.value as 'draft' | 'published';
+    });
+    excerptInput.addEventListener('input', () => {
+      formData.excerpt = excerptInput.value;
+    });
+
+    // Load tags; pre-select the post's tags by name match
+    let availableTags: { id: number; name: string; slug: string }[] = [];
+    const postTagNames = new Set(
+      (mount.dataset.initialTags || '').split(',').filter(Boolean)
+    );
+    const tagRoot = createRoot(document.getElementById('tag-input-mount')!);
+    const renderTags = () => {
+      tagRoot.render(
+        createElement(TagInput, {
+          available: availableTags,
+          selected: formData.tagIds,
+          onChange: (ids: number[]) => {
+            formData.tagIds = ids;
+            renderTags();
+          },
+          onCreate: async (name: string) => {
+            const tag = await createTag(name);
+            availableTags = [...availableTags, tag];
+            return tag;
+          },
+        })
+      );
+    };
+    fetch(`${API_BASE}/api/v1/tags`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((tags: { id: number; name: string; slug: string }[]) => {
+        availableTags = tags;
+        formData.tagIds = tags
+          .filter((t) => postTagNames.has(t.name))
+          .map((t) => t.id);
+        renderTags();
+      })
+      .catch(() => renderTags());
+
+    // Cover image uploader — existing URL shows as preview; no signed_id until replaced
+    const mediaRoot = createRoot(document.getElementById('media-uploader-mount')!);
+    const renderMedia = () => {
+      mediaRoot.render(
+        createElement(MediaUploader, {
+          value: formData.coverImageSignedId,
+          previewUrl: formData.coverImageUrl,
+          onChange: (signedId, url) => {
+            formData.coverImageSignedId = signedId;
+            formData.coverImageUrl = url;
+            renderMedia();
+          },
+        })
+      );
+    };
+    // Show existing cover without a signed_id (replace sets a fresh one)
+    if (mount.dataset.initialCover) {
+      formData.coverImageUrl = mount.dataset.initialCover;
+    }
+    renderMedia();
+
+    // TipTap editor seeded with existing body
+    const editorRoot = createRoot(document.getElementById('post-editor-mount')!);
+    editorRoot.render(
+      createElement(PostEditor, {
+        initialContent: formData.bodyHtml,
+        onChange: (html: string) => {
+          formData.bodyHtml = html;
+        },
+      })
+    );
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      formData.title = titleInput.value.trim();
+      formData.slug = slugInput.value.trim();
+      formData.categoryId = categorySelect.value;
+      formData.excerpt = excerptInput.value;
+
+      if (!formData.title) {
+        setError('Title is required.');
+        return;
+      }
+      if (!formData.bodyHtml || formData.bodyHtml === '<p></p>') {
+        setError('Post body is required.');
+        return;
+      }
+
+      setError(null);
+      setSaving(true);
+      updatePost(originalSlug, buildPayload(formData, lockVersion))
+        .then(() => {
+          window.location.href = '/admin';
+        })
+        .catch((err: unknown) => {
+          setSaving(false);
+          if (err instanceof ApiError) {
+            if (err.status === 409) {
+              setError(
+                'This post was modified by someone else. Reload the page to get their version (your changes will be lost), or retry saving.'
+              );
+            } else {
+              setError(err.errors?.join(' · ') || err.message);
+            }
+          } else {
+            setError('Connection error. Please try again.');
+          }
+        });
+    });
+  }
+</script>
+
+<style>
+  .editor-page {
+    max-width: 900px;
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .post-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+  }
+
+  .form-row {
+    margin-bottom: 1rem;
+  }
+
+  .form-row-split {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .hint,
+  .warning-hint {
+    color: var(--color-text-muted);
+    font-weight: 400;
+    font-size: 0.8rem;
+  }
+
+  .warning-hint {
+    color: #b45309;
+  }
+
+  .load-error {
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .form-error {
+    background: #fee;
+    color: var(--color-error);
+    border: 1px solid #fcc;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .saving {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    .form-row-split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
