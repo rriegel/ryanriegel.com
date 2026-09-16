@@ -10,10 +10,10 @@
 puts "Seeding database..."
 
 # --- Admin User ---
-admin = User.find_or_create_by!(email: "admin@example.com") do |u|
-  u.password = "admin!!1"
-  u.password_confirmation = "admin!!1"
-end
+admin = User.find_or_initialize_by(email: "admin@example.com")
+admin.password = "admin!!1"
+admin.password_confirmation = "admin!!1"
+admin.save!
 puts "  User: #{admin.email}"
 
 # --- Categories ---

@@ -38,11 +38,61 @@ export interface PostsResponse {
 }
 
 async function fetchApi<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
+  });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<T>;
+}
+
+async function fetchApiWithBody<T>(
+  path: string,
+  method: string,
+  body?: Record<string, unknown>
+): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export interface LoginResponse {
+  status: { code: number; message: string };
+  data: { user: { id: number; email: string }; token: string };
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  return fetchApiWithBody<LoginResponse>('/api/v1/login', 'POST', {
+    user: { email, password },
+  });
+}
+
+export async function logout(): Promise<void> {
+  await fetchApiWithBody<void>('/api/v1/logout', 'DELETE');
+}
+
+export async function getAdminPosts(
+  page: number = 1,
+  perPage: number = 20,
+  status?: string,
+  sortBy: string = 'published_at',
+  sortDir: string = 'desc'
+): Promise<PostsResponse> {
+  let query = `/api/v1/posts?page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortDir}`;
+  if (status && status !== 'all') {
+    query += `&status=${status}`;
+  }
+  return fetchApi<PostsResponse>(query);
 }
 
 export async function getPosts(page: number = 1, perPage: number = 10): Promise<PostsResponse> {

@@ -2,17 +2,31 @@
 
 # Start SimpleCov BEFORE anything else loads so all app code is tracked
 require "simplecov"
+require "undercover/simplecov_formatter"
+
+# HTML report (coverage/index.html) + JSON report for `undercover`.
+# Each formatter gets its own output filename — sharing coverage.json
+# makes the HTML formatter's concurrency check crash on the JSON
+# formatter's epoch-integer timestamp schema (Time.iso8601 TypeError).
+SimpleCov::Formatter::Undercover.output_filename = "undercover.json"
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
+  [
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::Undercover
+  ]
+)
+
 SimpleCov.start "rails" do
   enable_coverage :branch
 
-  add_filter "/spec/"
-  add_filter "/config/"
-  add_filter "/db/"
+  skip "/spec/"
+  skip "/config/"
+  skip "/db/"
 
-  add_group "Models", "app/models"
-  add_group "Controllers", "app/controllers"
-  add_group "Jobs", "app/jobs"
-  add_group "Mailers", "app/mailers"
+  group "Models", "app/models"
+  group "Controllers", "app/controllers"
+  group "Jobs", "app/jobs"
+  group "Mailers", "app/mailers"
 end
 
 RSpec.configure do |config|
