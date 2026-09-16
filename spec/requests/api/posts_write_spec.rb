@@ -46,7 +46,7 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       login_and_get_token
       post "/api/v1/posts", params: { post: { title: "", body: "" } }, headers: auth_headers, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["errors"]).to be_present
     end
   end
