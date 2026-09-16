@@ -34,7 +34,10 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
+# image_processing 2.x makes backends soft dependencies: add ruby-vips explicitly
+# (requires the system libvips library, e.g. apt-get install libvips-dev)
 gem "image_processing", "~> 2.0"
+gem "ruby-vips", "~> 2.0"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
