@@ -25,7 +25,7 @@ RSpec.describe "Authentication", type: :request do
     it "returns errors for invalid registration" do
       post "/api/v1/register", params: { user: { email: "", password: "x", password_confirmation: "y" } }, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.parsed_body["status"]["code"]).to eq(422)
       expect(response.parsed_body["errors"]).to be_present
     end

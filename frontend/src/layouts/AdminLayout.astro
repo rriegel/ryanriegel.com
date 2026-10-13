@@ -15,6 +15,24 @@ const { title, activeNav = 'dashboard' } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} | Admin</title>
     <meta name="robots" content="noindex,nofollow" />
+    {import.meta.env.DEV && (
+      <script is:inline type="module">
+        // React-refresh preamble for manually-mounted React (createRoot)
+        // components. Astro only injects the react-refresh preamble for
+        // client: islands, so in dev every transformed TSX module would
+        // otherwise crash with "ReferenceError: $RefreshSig$ is not defined".
+        // Mirrors @vitejs/plugin-react's transformIndexHtml preamble;
+        // production builds never emit this tag (import.meta.env.DEV gate).
+        try {
+          const refresh = await import("/@react-refresh");
+          refresh.injectIntoGlobalHook(window);
+        } catch {
+          // /@react-refresh only exists while `astro dev` is running.
+        }
+        window.$RefreshReg$ = () => {};
+        window.$RefreshSig$ = () => (type) => type;
+      </script>
+    )}
   </head>
   <body>
     <div class="admin-wrapper">

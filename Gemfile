@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+gem "rails", "~> 8.1.4"
 gem "dotenv-rails", groups: [ :development, :test ]
 # Authentication
 gem "devise"
@@ -34,7 +34,10 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+# image_processing 2.x makes backends soft dependencies: add ruby-vips explicitly
+# (requires the system libvips library, e.g. apt-get install libvips-dev)
+gem "image_processing", "~> 2.0"
+gem "ruby-vips", "~> 2.0"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
