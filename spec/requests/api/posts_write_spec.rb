@@ -61,10 +61,21 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       )
     end
 
+    let(:cover_post_params) do
+      {
+        post: {
+          title: "Covered Post",
+          body: "<p>with cover</p>",
+          status: "draft"
+        }
+      }
+    end
+    let!(:existing_post) { create(:post, title: "Existing Title", slug: "existing-title") }
+
     it "creates a post with a cover image (regression: UnknownAttributeError 500)" do
       login_and_get_token
       post "/api/v1/posts",
-           params: { post: valid_params[:post].merge(cover_image_signed_id: cover_blob.signed_id) },
+           params: { post: cover_post_params[:post].merge(cover_image_signed_id: cover_blob.signed_id) },
            headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
@@ -75,19 +86,19 @@ RSpec.describe "API::Posts Write Operations", type: :request do
 
     it "attaches a replacement cover on update" do
       login_and_get_token
-      patch "/api/v1/posts/original-title",
+      patch "/api/v1/posts/existing-title",
             params: { post: { cover_image_signed_id: cover_blob.signed_id } },
             headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:ok)
-      expect(post_record.reload.cover_image).to be_attached
+      expect(existing_post.reload.cover_image).to be_attached
       expect(response.parsed_body["cover_image"]).to be_present
     end
 
     it "saves without a cover when the signed_id is invalid" do
       login_and_get_token
       post "/api/v1/posts",
-           params: { post: valid_params[:post].merge(cover_image_signed_id: "garbage-id") },
+           params: { post: cover_post_params[:post].merge(cover_image_signed_id: "garbage-id") },
            headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
@@ -124,23 +135,23 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       post "/api/v1/posts",
         params: { post: { title: "Two Tab Spec", slug: "two-tab-spec", body: "<p>v0</p>",
                           status: "draft", tag_ids: [] } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
       slug = response.parsed_body["slug"]
       stale = response.parsed_body["lock_version"]
 
       # tab A saves first
       patch "/api/v1/posts/#{slug}",
         params: { post: { title: "Two Tab Spec A", lock_version: stale } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
       expect(response).to have_http_status(:ok)
 
       # tab B saves without refreshing — must conflict
       patch "/api/v1/posts/#{slug}",
         params: { post: { title: "Two Tab Spec B", lock_version: stale } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
       expect(response).to have_http_status(:conflict)
 
-      delete "/api/v1/posts/#{slug}", headers: auth_headers
+      delete "/api/v1/posts/#{slug}", headers: auth_headers, as: :json
     end
 
     it "saves cleanly when the lock_version is current" do
@@ -148,16 +159,16 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       post "/api/v1/posts",
         params: { post: { title: "Fresh Save Spec", slug: "fresh-save-spec", body: "<p>v0</p>",
                           status: "draft", tag_ids: [] } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
       slug = response.parsed_body["slug"]
       current = response.parsed_body["lock_version"]
 
       patch "/api/v1/posts/#{slug}",
         params: { post: { body: "<p>v1</p>", lock_version: current } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
       expect(response).to have_http_status(:ok)
 
-      delete "/api/v1/posts/#{slug}", headers: auth_headers
+      delete "/api/v1/posts/#{slug}", headers: auth_headers, as: :json
     end
   end
 
@@ -169,7 +180,7 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       post "/api/v1/posts",
         params: { post: { title: "Slug Honor Probe", slug: "my-custom-slug", body: "<p>x</p>",
                           status: "draft", tag_ids: [] } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["slug"]).to eq("my-custom-slug")
@@ -179,7 +190,7 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       login_and_get_token
       post "/api/v1/posts",
         params: { post: { title: "Auto Slug Still Works", body: "<p>x</p>", status: "draft", tag_ids: [] } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["slug"]).to eq("auto-slug-still-works")
@@ -194,7 +205,7 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       post "/api/v1/posts",
         params: { post: { title: "Excerpted Post", slug: "excerpted-post", body: "<p>b</p>",
                           excerpt: "Card summary text", status: "published", tag_ids: [] } },
-        headers: auth_headers
+        headers: auth_headers, as: :json
 
       expect(response).to have_http_status(:created)
       expect(response.parsed_body["excerpt"]).to eq("Card summary text")

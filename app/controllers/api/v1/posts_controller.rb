@@ -147,9 +147,10 @@ class Api::V1::PostsController < ApplicationController
     begin
       blob = ActiveStorage::Blob.find_signed!(params[:post][:cover_image_signed_id])
       post.cover_image.attach(blob)
-    rescue ActiveRecord::RecordNotFound
-      # Invalid/unknown signed ID (find_signed! raises RecordNotFound, same as
-      # uploads_controller#find_blob!) — post saves without a cover.
+    rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageVerifier::InvalidSignature
+      # Malformed signed ID raises InvalidSignature (not RecordNotFound —
+      # that was a latent 500); a well-formed-but-unknown ID raises
+      # RecordNotFound. Either way: post saves without a cover.
     end
   end
 
