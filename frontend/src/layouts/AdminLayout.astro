@@ -1,7 +1,7 @@
 ---
 interface Props {
   title: string;
-  activeNav?: 'dashboard' | 'posts' | 'categories' | 'tags';
+  activeNav?: 'dashboard' | 'categories' | 'tags';
 }
 
 const { title, activeNav = 'dashboard' } = Astro.props;
@@ -44,10 +44,6 @@ const { title, activeNav = 'dashboard' } = Astro.props;
           <a href="/admin" class:list={[activeNav === 'dashboard' && 'active']}>
             <span class="icon">📊</span>
             Dashboard
-          </a>
-          <a href="/admin/posts" class:list={[activeNav === 'posts' && 'active']}>
-            <span class="icon">📝</span>
-            Posts
           </a>
           <a href="/admin/categories" class:list={[activeNav === 'categories' && 'active']}>
             <span class="icon">📁</span>
