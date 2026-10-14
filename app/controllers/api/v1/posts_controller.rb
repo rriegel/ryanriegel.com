@@ -71,16 +71,29 @@ class Api::V1::PostsController < ApplicationController
   end
 
   def update
-    if params[:post][:cover_image_signed_id].present?
-      attach_cover_image_from_signed_id(@post)
-      # Attaching touches the record, bumping lock_version in the DB out from
-      # under the already-loaded @post — which would self-trigger
-      # StaleObjectError (409) on the replace-cover save path. Re-sync the
-      # optimistic-lock column from the DB before updating.
-      @post.lock_version = Post.where(id: @post.id).pick(:lock_version)
+    # Two-tab staleness check, done UP FRONT against the value set_post
+    # loaded (the DB state at request start). It must run before the cover
+    # attach below: attaching touches the row and bumps lock_version, which
+    # would make the client's version look stale to its own request.
+    posted_lock = post_params[:lock_version]
+    # Strictly-behind check: a client version older than the DB row means a
+    # genuine concurrent edit → 409. Written as `<` rather than `!=` so that
+    # any server-side version bump a client couldn't observe (e.g. a future
+    # background job touching the row after the response is built) can never
+    # false-conflict the client's next save.
+    if posted_lock.present? && posted_lock.to_i < @post.lock_version
+      return render json: { error: "This post has been modified by someone else. Please reload and try again." },
+                    status: :conflict
     end
 
-    if @post.update(post_params)
+    # Note: cover attach no longer touches the record (see
+    # touch_attachment_records = false in application.rb), so attaching
+    # cannot bump lock_version out from under this update.
+    if params[:post][:cover_image_signed_id].present?
+      attach_cover_image_from_signed_id(@post)
+    end
+
+    if @post.update(post_params.except(:lock_version))
       render json: post_json(@post, full: true)
     else
       render json: { errors: @post.errors.full_messages }, status: :unprocessable_entity
@@ -116,7 +129,8 @@ class Api::V1::PostsController < ApplicationController
     # mass-assign an unknown attribute (ActiveModel::UnknownAttributeError,
     # 500 on create/update). Same for :cover_image (an attachment, not a
     # column). Both are read from the raw params by the attach helper.
-    params.require(:post).permit(:title, :body, :excerpt, :status, :category_id, :published_at, tag_ids: [])
+    params.require(:post).permit(:title, :slug, :body, :excerpt, :status, :category_id,
+                                     :published_at, :lock_version, tag_ids: [])
   end
 
   def servable_blob_url(blob)

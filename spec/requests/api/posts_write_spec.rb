@@ -116,6 +116,76 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
   end
 
+  describe "optimistic locking (two-tab conflict)" do
+    # Regression: :lock_version was not permitted, so client-sent stale
+    # versions were silently discarded and concurrent edits never conflicted.
+    it "409s when a second tab saves against a stale lock_version" do
+      login_and_get_token
+      post "/api/v1/posts",
+        params: { post: { title: "Two Tab Spec", slug: "two-tab-spec", body: "<p>v0</p>",
+                          status: "draft", tag_ids: [] } },
+        headers: auth_headers
+      slug = response.parsed_body["slug"]
+      stale = response.parsed_body["lock_version"]
+
+      # tab A saves first
+      patch "/api/v1/posts/#{slug}",
+        params: { post: { title: "Two Tab Spec A", lock_version: stale } },
+        headers: auth_headers
+      expect(response).to have_http_status(:ok)
+
+      # tab B saves without refreshing — must conflict
+      patch "/api/v1/posts/#{slug}",
+        params: { post: { title: "Two Tab Spec B", lock_version: stale } },
+        headers: auth_headers
+      expect(response).to have_http_status(:conflict)
+
+      delete "/api/v1/posts/#{slug}", headers: auth_headers
+    end
+
+    it "saves cleanly when the lock_version is current" do
+      login_and_get_token
+      post "/api/v1/posts",
+        params: { post: { title: "Fresh Save Spec", slug: "fresh-save-spec", body: "<p>v0</p>",
+                          status: "draft", tag_ids: [] } },
+        headers: auth_headers
+      slug = response.parsed_body["slug"]
+      current = response.parsed_body["lock_version"]
+
+      patch "/api/v1/posts/#{slug}",
+        params: { post: { body: "<p>v1</p>", lock_version: current } },
+        headers: auth_headers
+      expect(response).to have_http_status(:ok)
+
+      delete "/api/v1/posts/#{slug}", headers: auth_headers
+    end
+  end
+
+  describe "slug handling" do
+    # Regression: :slug was missing from post_params, so custom slugs were
+    # silently discarded and regenerated from the title.
+    it "honors a custom slug on create" do
+      login_and_get_token
+      post "/api/v1/posts",
+        params: { post: { title: "Slug Honor Probe", slug: "my-custom-slug", body: "<p>x</p>",
+                          status: "draft", tag_ids: [] } },
+        headers: auth_headers
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["slug"]).to eq("my-custom-slug")
+    end
+
+    it "auto-generates a slug when none is provided" do
+      login_and_get_token
+      post "/api/v1/posts",
+        params: { post: { title: "Auto Slug Still Works", body: "<p>x</p>", status: "draft", tag_ids: [] } },
+        headers: auth_headers
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["slug"]).to eq("auto-slug-still-works")
+    end
+  end
+
   describe "excerpt persistence" do
     # Regression: :excerpt was missing from post_params, so the admin form's
     # excerpt was silently dropped by strong params and never rendered.

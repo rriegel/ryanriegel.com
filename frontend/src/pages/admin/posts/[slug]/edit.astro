@@ -103,6 +103,7 @@ if (!post && !loadError) {
           <div class="form-group">
             <label for="slug">Slug <span class="warning-hint">(changing breaks links)</span></label>
             <input type="text" id="slug" name="slug" />
+            <div id="slug-note" class="slug-note" hidden></div>
           </div>
           <div class="form-group">
             <label for="category">Category</label>
@@ -215,22 +216,29 @@ if (!post && !loadError) {
 
     titleInput.addEventListener('input', () => {
       formData.title = titleInput.value;
+      updateSlugNote();
     });
     slugInput.addEventListener('input', () => {
       formData.slug = slugInput.value;
+      updateSlugNote();
     });
-    slugInput.addEventListener('blur', () => {
-      // Warn if slug diverges from title-derived slug
+    // Passive note when the slug diverges from the title-derived one.
+    // NOTE: must NOT use setCustomValidity here — that marks the field
+    // invalid and the browser silently blocks form submission, making any
+    // post with a custom slug unsaveable. The note is informational only.
+    const slugNote = document.getElementById('slug-note') as HTMLElement;
+    const updateSlugNote = () => {
       const derived = generateSlug(formData.title);
       if (formData.slug && derived && formData.slug !== derived) {
-        slugInput.setCustomValidity(
-          'Custom slug — this changes the public URL of the post.'
-        );
-        slugInput.title = 'Custom slug — this changes the public URL of the post.';
+        slugNote.textContent =
+          'Custom slug — this post lives at /blog/' + formData.slug +
+          '. Editing it changes the public URL; existing links will break.';
+        slugNote.hidden = false;
       } else {
-        slugInput.setCustomValidity('');
+        slugNote.hidden = true;
       }
-    });
+    };
+    updateSlugNote(); // show immediately for posts that already have custom slugs
 
     // Load categories and select the post's current one by name
     const currentCategoryName = mount.dataset.initialCategory || '';
@@ -408,6 +416,12 @@ if (!post && !loadError) {
 
   .warning-hint {
     color: #b45309;
+  }
+
+  .slug-note {
+    color: #b45309;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
   }
 
   .load-error {
