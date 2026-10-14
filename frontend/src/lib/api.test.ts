@@ -6,6 +6,7 @@ import {
   getTags,
   getPostsByCategory,
   getPostsByTag,
+  getFeedPosts,
   type Post,
   type Category,
   type Tag,
@@ -94,6 +95,37 @@ describe('API Client', () => {
       } as Response);
 
       await expect(getPosts()).rejects.toThrow('API error: 500 Internal Server Error');
+    });
+  });
+
+  describe('getFeedPosts', () => {
+    it('should request full bodies via include_body=true', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockPostsResponse,
+      } as Response);
+
+      const result = await getFeedPosts();
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/posts?page=1&per_page=20&include_body=true'),
+        { credentials: 'include' }
+      );
+      expect(result).toEqual(mockPostsResponse);
+    });
+
+    it('should honor custom per_page', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockPostsResponse,
+      } as Response);
+
+      await getFeedPosts(50);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/posts?page=1&per_page=50&include_body=true'),
+        { credentials: 'include' }
+      );
     });
   });
 

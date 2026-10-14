@@ -1,5 +1,5 @@
 ---
-import { getPosts, type Post } from '../lib/api';
+import { getFeedPosts, type Post } from '../lib/api';
 
 const siteUrl = import.meta.env.SITE_URL || 'https://ryanriegel.com';
 
@@ -7,23 +7,60 @@ Astro.response.headers.set('Content-Type', 'application/rss+xml; charset=utf-8')
 
 let posts: Post[] = [];
 try {
-  const response = await getPosts(1, 20);
+  const response = await getFeedPosts(20);
   posts = response.data;
 } catch (e) {
   // Empty feed on error
 }
 
+// Post bodies are stored relative to the site origin (e.g. blob paths like
+// /rails/active_storage/...). Feed readers render item HTML out of context,
+// so relative srcs break. Rewrite src/href to absolute URLs against SITE_URL.
+function absolutizeUrls(html: string, base: string): string {
+  if (!html) return html;
+  const baseNoTrail = base.replace(/\/+$/, '');
+  return html
+    .replace(/(src|href)\s*=\s*"((?!https?:|\/\/|mailto:|#|data:)[^"]*)"/gi,
+      (_m, attr: string, url: string) => `${attr}="${baseNoTrail}${url.startsWith('/') ? url : '/' + url}"`)
+    .replace(/(src|href)\s*=\s*'((?!https?:|\/\/|mailto:|#|data:)[^']*)'/gi,
+      (_m, attr: string, url: string) => `${attr}='${baseNoTrail}${url.startsWith('/') ? url : '/' + url}'`);
+}
+
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Media type for RSS <enclosure>. Blob content_type is authoritative
+// (covers are validated to jpeg/png/webp at upload).
+function coverMimeType(contentType?: string | null): string {
+  const allowed: Record<string, string> = {
+    'image/jpeg': 'image/jpeg',
+    'image/png': 'image/png',
+    'image/webp': 'image/webp',
+  };
+  return (contentType && allowed[contentType]) || 'application/octet-stream';
+}
+
 const feedItems = posts.map(post => {
   const link = `${siteUrl}/blog/${post.slug}`;
   const pubDate = post.published_at ? new Date(post.published_at).toUTCString() : '';
-  
+  const bodyHtml = absolutizeUrls(post.body || post.excerpt || '', siteUrl);
+  const enclosure = post.cover_image
+    ? `\n      <enclosure url="${escapeXml(post.cover_image)}" type="${coverMimeType(post.cover_image_content_type)}" length="${post.cover_image_byte_size ?? 0}" />`
+    : '';
+
   return `    <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${post.excerpt || ''}]]></description>
-      ${post.category ? `<category>${post.category.name}</category>` : ''}
+      <description><![CDATA[${bodyHtml}]]></description>
+      ${post.category ? `<category>${escapeXml(post.category.name)}</category>` : ''}${enclosure}
     </item>`;
 }).join('\n');
 

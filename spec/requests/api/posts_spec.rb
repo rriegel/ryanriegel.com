@@ -49,6 +49,68 @@ RSpec.describe "Api::Posts", type: :request do
     end
   end
 
+  describe "GET /api/v1/posts?include_body=true" do
+    it "includes body for published posts" do
+      get "/api/v1/posts", params: { include_body: "true" }
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json["data"].first["body"]).to be_present
+    end
+
+    it "still excludes draft posts from the public feed" do
+      get "/api/v1/posts", params: { include_body: "true" }
+
+      json = JSON.parse(response.body)
+      expect(json["data"].map { |p| p["title"] }).not_to include("Draft Post")
+    end
+
+    it "returns body nil without the param (default behavior unchanged)" do
+      get "/api/v1/posts"
+
+      json = JSON.parse(response.body)
+      expect(json["data"].first["body"]).to be_nil
+    end
+  end
+
+  describe "cover image serialization" do
+    let(:cover_post) do
+      post = create(:post, :published, title: "Covered Post")
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("fake png bytes"),
+        filename: "cover.png",
+        content_type: "image/png"
+      )
+      post.cover_image.attach(blob)
+      post.reload
+      post
+    end
+
+    before { cover_post }
+
+    it "includes cover_image URL, content type, and byte size" do
+      get "/api/v1/posts"
+
+      json = JSON.parse(response.body)
+      post = json["data"].find { |p| p["title"] == "Covered Post" }
+
+      expect(post["cover_image"]).to be_present
+      expect(post["cover_image_content_type"]).to eq("image/png")
+      expect(post["cover_image_byte_size"]).to be_present
+    end
+
+    it "returns nil cover fields for posts without covers" do
+      get "/api/v1/posts"
+
+      json = JSON.parse(response.body)
+      post = json["data"].find { |p| p["title"] == "Published Post" }
+
+      expect(post["cover_image"]).to be_nil
+      expect(post["cover_image_content_type"]).to be_nil
+      expect(post["cover_image_byte_size"]).to be_nil
+    end
+  end
+
   describe "GET /api/v1/posts/:slug" do
     it "returns the post with body" do
       get "/api/v1/posts/#{published_post.slug}"
