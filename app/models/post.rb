@@ -42,16 +42,18 @@ class Post < ApplicationRecord
     self.body = ActionController::Base.helpers.sanitize(
       body,
       tags: %w[
-        p br strong em u h1 h2 h3 h4 h5 h6 ul ol li a img blockquote code pre span div
+        p br strong em u h1 h2 h3 h4 h5 h6 ul ol li a img blockquote code pre span div hr
         video audio source iframe
       ],
-      attributes: {
-        all: %w[href src alt title class],
-        "video" => %w[controls poster width height],
-        "audio" => %w[controls],
-        "source" => %w[src type],
-        "iframe" => %w[src width height frameborder allowfullscreen allow]
-      }
+      # sanitize's `attributes:` option takes a FLAT list applied to all
+      # tags — a per-tag hash is silently ignored, which stripped every
+      # attribute (img src/alt/class) from stored bodies. Protocol safety
+      # (javascript: URLs etc.) stays enforced by rails-html-sanitizer's
+      # default URI filter.
+      attributes: %w[
+        href src alt title class controls poster width height frameborder
+        allowfullscreen allow type loading data-embed
+      ]
     )
   end
 

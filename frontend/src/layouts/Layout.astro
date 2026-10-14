@@ -248,6 +248,39 @@ const ogImage = image || `${siteUrl}/og-default.png`;
     padding: 0;
   }
 
+  /* Rendered post-body elements (bodies come from the API via set:html into
+     div.content, e.g. blog/[slug].astro). Values mirror the editor-side rules
+     in styles/admin-editor.css (.tiptap-content) so published articles look
+     like the in-editor view instead of falling back to browser defaults. */
+  .content hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1.25rem 0;
+  }
+
+  .content blockquote {
+    border-left: 3px solid var(--color-border);
+    padding-left: 1rem;
+    color: var(--color-text-muted);
+    margin: 0.75rem 0;
+  }
+
+  .content ul,
+  .content ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .content li {
+    margin-bottom: 0.25rem;
+  }
+
+  .content img,
+  .content video {
+    max-width: 100%;
+    height: auto;
+  }
+
   /* Responsive */
   @media (max-width: 600px) {
     .nav-toggle {

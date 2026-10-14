@@ -107,8 +107,17 @@ export async function getPostsByTag(tagId: number, page: number = 1): Promise<Po
   return fetchApi<PostsResponse>(`/api/v1/posts?tag_id=${tagId}&page=${page}`);
 }
 
-export async function getPost(slug: string): Promise<Post> {
-  return fetchApi<Post>(`/api/v1/posts/${slug}`);
+export async function getPost(slug: string, cookie?: string): Promise<Post> {
+  // Optional forwarded cookie lets the SSR fetch authenticate so admins can
+  // preview draft posts from the blog view.
+  const res = await fetch(`${API_BASE}/api/v1/posts/${encodeURIComponent(slug)}`, {
+    credentials: 'include',
+    headers: cookie ? { Cookie: cookie } : undefined,
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<Post>;
 }
 
 export async function getCategories(): Promise<Category[]> {
