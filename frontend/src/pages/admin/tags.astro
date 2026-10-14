@@ -1,0 +1,468 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { hasAuthCookie } from '../../lib/admin-auth';
+
+// Auth check — redirect to login if no cookie
+if (!hasAuthCookie(Astro)) {
+  return Astro.redirect('/admin/login');
+}
+---
+
+<AdminLayout title="Tags" activeNav="tags">
+  <div class="tax-page">
+    <div class="toolbar">
+      <h1>Tags</h1>
+      <div class="create-row">
+        <input
+          type="text"
+          id="new-name"
+          placeholder="New tag name"
+          maxlength="100"
+        />
+        <button id="create-btn" class="btn-primary">Create</button>
+      </div>
+    </div>
+
+    <div id="error-banner" class="error-banner" hidden></div>
+
+    <div class="table-wrapper">
+      <table class="tax-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Published Posts</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tax-tbody">
+          <tr>
+            <td colspan="4" class="empty-state">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal" hidden>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <h3>Delete Tag</h3>
+        <p>
+          Are you sure you want to delete "<span id="delete-item-name"></span>"?
+          It will be removed from all posts that use it. This cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button id="cancel-delete" class="btn-secondary">Cancel</button>
+          <button id="confirm-delete" class="btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import {
+    fetchTaxonomy,
+    createTag,
+    updateTag,
+    deleteTag,
+    type TaxonomyItem,
+  } from '../../lib/taxonomy';
+
+  const tbody = document.getElementById('tax-tbody') as HTMLTableSectionElement;
+  const newNameInput = document.getElementById('new-name') as HTMLInputElement;
+  const createBtn = document.getElementById('create-btn') as HTMLButtonElement;
+  const errorBanner = document.getElementById('error-banner') as HTMLElement;
+  const modal = document.getElementById('delete-modal');
+  const deleteItemName = document.getElementById('delete-item-name');
+  const cancelBtn = document.getElementById('cancel-delete') as HTMLButtonElement;
+  const confirmBtn = document.getElementById('confirm-delete') as HTMLButtonElement;
+
+  let items: TaxonomyItem[] = [];
+  let deleteSlug: string | null = null;
+
+  const showError = (msg: string) => {
+    errorBanner.textContent = msg;
+    errorBanner.hidden = false;
+  };
+
+  const clearError = () => {
+    errorBanner.hidden = true;
+  };
+
+  function render() {
+    tbody.innerHTML = '';
+
+    if (items.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'empty-state';
+      td.textContent = 'No categories yet. Create your first one above.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    for (const item of items) {
+      const tr = document.createElement('tr');
+      tr.dataset.slug = item.slug;
+      tr.dataset.name = item.name;
+
+      // Name cell: text or inline rename input
+      const nameTd = document.createElement('td');
+      nameTd.className = 'name-cell';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'name-text';
+      nameSpan.textContent = item.name;
+      nameTd.appendChild(nameSpan);
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'rename-input';
+      nameInput.value = item.name;
+      nameInput.hidden = true;
+      nameTd.appendChild(nameInput);
+      tr.appendChild(nameTd);
+
+      const slugTd = document.createElement('td');
+      slugTd.className = 'slug-cell';
+      slugTd.textContent = item.slug;
+      tr.appendChild(slugTd);
+
+      const countTd = document.createElement('td');
+      countTd.textContent = String(item.posts_count);
+      tr.appendChild(countTd);
+
+      const actionsTd = document.createElement('td');
+      actionsTd.className = 'actions';
+      const renameBtn = document.createElement('button');
+      renameBtn.className = 'action-link';
+      renameBtn.textContent = 'Rename';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'action-link delete-btn';
+      deleteBtn.textContent = 'Delete';
+      actionsTd.append(renameBtn, deleteBtn);
+      tr.appendChild(actionsTd);
+
+      renameBtn.addEventListener('click', () => {
+        clearError();
+        nameSpan.hidden = true;
+        nameInput.hidden = false;
+        nameInput.focus();
+        nameInput.select();
+      });
+
+      const commitRename = async () => {
+        const next = nameInput.value.trim();
+        if (!next || next === item.name) {
+          nameSpan.hidden = false;
+          nameInput.hidden = true;
+          return;
+        }
+        renameBtn.disabled = true;
+        try {
+          const updated = await updateTag(item.slug, next);
+          item.name = updated.name;
+          item.slug = updated.slug;
+        } catch (e) {
+          showError(e instanceof Error ? e.message : 'Rename failed');
+        } finally {
+          renameBtn.disabled = false;
+          nameSpan.hidden = false;
+          nameInput.hidden = true;
+          render();
+        }
+      };
+
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commitRename();
+        } else if (e.key === 'Escape') {
+          nameSpan.hidden = false;
+          nameInput.hidden = true;
+        }
+      });
+      nameInput.addEventListener('blur', () => {
+        if (!nameInput.hidden) commitRename();
+        else {
+          nameSpan.hidden = false;
+          nameInput.hidden = true;
+        }
+      });
+
+      deleteBtn.addEventListener('click', () => {
+        clearError();
+        deleteSlug = item.slug;
+        if (deleteItemName) deleteItemName.textContent = item.name;
+        if (modal) modal.hidden = false;
+      });
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  async function load() {
+    try {
+      items = await fetchTaxonomy('tags');
+      render();
+    } catch (e) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'empty-state';
+      td.textContent = e instanceof Error ? e.message : 'Failed to load tags';
+      tr.appendChild(td);
+      tbody.innerHTML = '';
+      tbody.appendChild(tr);
+    }
+  }
+
+  createBtn.addEventListener('click', async () => {
+    const name = newNameInput.value.trim();
+    if (!name) {
+      showError('Enter a name to create a tag.');
+      return;
+    }
+    createBtn.disabled = true;
+    clearError();
+    try {
+      await createTag(name);
+      newNameInput.value = '';
+      await load();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : 'Create failed');
+    } finally {
+      createBtn.disabled = false;
+    }
+  });
+
+  newNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      createBtn.click();
+    }
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    if (modal) modal.hidden = true;
+    deleteSlug = null;
+  });
+
+  modal?.querySelector('.modal-overlay')?.addEventListener('click', () => {
+    if (modal) modal.hidden = true;
+    deleteSlug = null;
+  });
+
+  confirmBtn.addEventListener('click', async () => {
+    if (!deleteSlug || !confirmBtn) return;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Deleting…';
+    try {
+      await deleteTag(deleteSlug);
+      if (modal) modal.hidden = true;
+      await load();
+    } catch (e) {
+      if (modal) modal.hidden = true;
+      showError(e instanceof Error ? e.message : 'Delete failed');
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Delete';
+      deleteSlug = null;
+    }
+  });
+
+  load();
+</script>
+
+<style>
+  .tax-page {
+    max-width: 1000px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .toolbar h1 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .create-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .create-row input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    min-width: 220px;
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    background: var(--color-link);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-link-hover);
+  }
+
+  .error-banner {
+    background: #fee;
+    color: var(--color-error, #dc3545);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    border: 1px solid #fcc;
+  }
+
+  .table-wrapper {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    overflow-x: auto;
+  }
+
+  .tax-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .tax-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    background: #fafafa;
+  }
+
+  .tax-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.875rem;
+  }
+
+  .tax-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .rename-input {
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--color-link);
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .action-link {
+    font-size: 0.8125rem;
+    color: var(--color-link);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .action-link:hover {
+    text-decoration: underline;
+  }
+
+  .delete-btn {
+    color: #dc3545;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Modal */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal[hidden] {
+    display: none;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    position: relative;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    background: #eee;
+    color: var(--color-text);
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .btn-danger {
+    padding: 0.5rem 1rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+</style>
