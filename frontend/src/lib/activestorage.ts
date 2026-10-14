@@ -1,6 +1,10 @@
 import { DirectUpload } from '@rails/activestorage';
 
-const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
+// All URLs here run IN THE BROWSER and go through the Astro dev proxy
+// (see vite.server.proxy in astro.config.mjs) as same-origin relative
+// requests. Absolute http://localhost:3000 URLs break for any browsing
+// origin other than localhost:4321 (LAN/Tailscale/prod) — the browser
+// would resolve `localhost` to the viewer's own machine.
 
 export interface DirectUploadResult {
   /** Signed ID — pass as cover_image_signed_id when saving the post. */
@@ -23,7 +27,7 @@ export function uploadToActiveStorage(file: File): Promise<DirectUploadResult> {
     // Step 1+2: DirectUpload handles the two-step direct upload protocol.
     const uploader = new DirectUpload(
       file,
-      `${API_BASE}/rails/active_storage/direct_uploads`
+      '/rails/active_storage/direct_uploads'
     );
 
     uploader.create((error, blob) => {
@@ -37,7 +41,7 @@ export function uploadToActiveStorage(file: File): Promise<DirectUploadResult> {
       }
 
       // Step 3: ask Rails for the signed_id and a usable URL for the blob.
-      fetch(`${API_BASE}/api/v1/uploads/create_blob`, {
+      fetch('/api/v1/uploads/create_blob', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

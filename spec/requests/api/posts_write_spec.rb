@@ -51,6 +51,50 @@ RSpec.describe "API::Posts Write Operations", type: :request do
     end
   end
 
+  describe "cover image via signed_id" do
+    # Content_type is what the model validates; byte content is irrelevant here.
+    let(:cover_blob) do
+      ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("cover-bytes"),
+        filename: "cover.png",
+        content_type: "image/png"
+      )
+    end
+
+    it "creates a post with a cover image (regression: UnknownAttributeError 500)" do
+      login_and_get_token
+      post "/api/v1/posts",
+           params: { post: valid_params[:post].merge(cover_image_signed_id: cover_blob.signed_id) },
+           headers: auth_headers, as: :json
+
+      expect(response).to have_http_status(:created)
+      record = Post.find_by!(slug: response.parsed_body["slug"])
+      expect(record.cover_image).to be_attached
+      expect(response.parsed_body["cover_image"]).to be_present
+    end
+
+    it "attaches a replacement cover on update" do
+      login_and_get_token
+      patch "/api/v1/posts/original-title",
+            params: { post: { cover_image_signed_id: cover_blob.signed_id } },
+            headers: auth_headers, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(post_record.reload.cover_image).to be_attached
+      expect(response.parsed_body["cover_image"]).to be_present
+    end
+
+    it "saves without a cover when the signed_id is invalid" do
+      login_and_get_token
+      post "/api/v1/posts",
+           params: { post: valid_params[:post].merge(cover_image_signed_id: "garbage-id") },
+           headers: auth_headers, as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(Post.find_by!(slug: response.parsed_body["slug"]).cover_image).not_to be_attached
+    end
+  end
+
   describe "PATCH /api/v1/posts/:slug" do
     let!(:post_record) { create(:post, title: "Original Title", slug: "original-title") }
 
@@ -69,6 +113,53 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       patch "/api/v1/posts/original-title", params: { post: { title: "Updated" } }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe "excerpt persistence" do
+    # Regression: :excerpt was missing from post_params, so the admin form's
+    # excerpt was silently dropped by strong params and never rendered.
+    it "persists the excerpt and exposes it on index and show" do
+      login_and_get_token
+      post "/api/v1/posts",
+        params: { post: { title: "Excerpted Post", slug: "excerpted-post", body: "<p>b</p>",
+                          excerpt: "Card summary text", status: "published", tag_ids: [] } },
+        headers: auth_headers
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["excerpt"]).to eq("Card summary text")
+
+      get "/api/v1/posts"
+      card = response.parsed_body["data"].find { |p| p["slug"] == "excerpted-post" }
+      expect(card["excerpt"]).to eq("Card summary text")
+
+      get "/api/v1/posts/excerpted-post"
+      expect(response.parsed_body["excerpt"]).to eq("Card summary text")
+    end
+  end
+
+  describe "GET /api/v1/posts/:slug draft visibility" do
+    let!(:draft_post) { create(:post, title: "Hidden Draft", slug: "hidden-draft", status: "draft") }
+
+    it "returns a draft to an authenticated user" do
+      login_and_get_token
+      get "/api/v1/posts/hidden-draft", headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["title"]).to eq("Hidden Draft")
+    end
+
+    it "returns 404 for a draft to an anonymous user (no existence leak)" do
+      get "/api/v1/posts/hidden-draft"
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns 404 for a nonexistent slug even when authenticated" do
+      login_and_get_token
+      get "/api/v1/posts/no-such-post", headers: auth_headers
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 

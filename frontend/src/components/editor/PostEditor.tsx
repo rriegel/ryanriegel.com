@@ -6,7 +6,6 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { uploadToActiveStorage } from '../../lib/activestorage';
 
-const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
 
 interface PostEditorProps {
   initialContent?: string;
@@ -281,4 +280,3 @@ export default function PostEditor({ initialContent = '', onChange }: PostEditor
   );
 }
 
-export { API_BASE };

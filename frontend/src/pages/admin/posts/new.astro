@@ -93,7 +93,6 @@ if (!hasAuthCookie(Astro)) {
   } from '../../../lib/post-form';
   import { generateSlug } from '../../../lib/utils';
 
-  const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
   const mount = document.querySelector('.editor-page[data-mode="new"]');
   if (mount) {
     const form = document.getElementById('post-form') as HTMLFormElement;
@@ -134,7 +133,7 @@ if (!hasAuthCookie(Astro)) {
     });
 
     // Load categories
-    fetch(`${API_BASE}/api/v1/categories`, { credentials: 'include' })
+    fetch('/api/v1/categories', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((cats: { id: number; name: string }[]) => {
         for (const c of cats) {
@@ -166,7 +165,7 @@ if (!hasAuthCookie(Astro)) {
         })
       );
     };
-    fetch(`${API_BASE}/api/v1/tags`, { credentials: 'include' })
+    fetch('/api/v1/tags', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((tags: { id: number; name: string; slug: string }[]) => {
         availableTags = tags;

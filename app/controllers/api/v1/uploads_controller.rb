@@ -21,7 +21,7 @@ class Api::V1::UploadsController < ApplicationController
 
     render json: {
       signed_id: blob.signed_id,
-      url: rails_blob_url(blob),
+      url: servable_blob_url(blob),
       filename: blob.filename,
       content_type: blob.content_type,
       byte_size: blob.byte_size
@@ -72,15 +72,16 @@ class Api::V1::UploadsController < ApplicationController
     nil
   end
 
-  def rails_blob_url(blob)
+  # Relative path in dev: the editor inserts this URL into post body HTML,
+  # so it must not bake in a host (same-origin via the Astro proxy from any
+  # browsing host). Absolute only for a production CDN host.
+  def servable_blob_url(blob)
     if Rails.env.production? && ENV["ASSET_HOST"].present?
       Rails.application.routes.url_helpers.rails_blob_url(
         blob, host: ENV["ASSET_HOST"]
       )
     else
-      Rails.application.routes.url_helpers.rails_blob_url(
-        blob, host: request.host, port: request.port
-      )
+      Rails.application.routes.url_helpers.rails_blob_path(blob, only_path: true)
     end
   end
 end
