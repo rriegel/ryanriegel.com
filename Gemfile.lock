@@ -156,7 +156,7 @@ GEM
       activesupport (>= 6.1)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
-    image_processing (2.1.0)
+    image_processing (2.2.0)
     imagen (0.2.0)
       parser (>= 2.5, != 2.5.1.1)
     io-console (0.9.4)
@@ -426,7 +426,7 @@ DEPENDENCIES
   dotenv-rails
   factory_bot_rails
   faker
-  image_processing (~> 2.0)
+  image_processing (~> 2.2)
   kamal
   pg (~> 1.7)
   puma (>= 5.0)
