@@ -34,5 +34,14 @@ module RyanriegelCom
 
     # Limit request body size to 1MB to prevent DoS attacks
     config.action_dispatch.max_request_size = 1.megabyte
+
+    # ActiveStorage attachment lifecycle (attach, blob analysis, variant
+    # work) must NOT touch the attached record: each touch bumps the
+    # record's lock_version, so async blob analysis was invalidating the
+    # lock_version the API had just returned — the client's very next save
+    # self-conflicted (409) even with no concurrent editor. With this off,
+    # lock_version changes only on real content edits, which is the
+    # contract the optimistic-locking API promises.
+    config.active_storage.touch_attachment_records = false
   end
 end

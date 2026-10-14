@@ -21,6 +21,10 @@ Rails.application.routes.draw do
       post "register", to: "registrations#create"
       delete "logout", to: "sessions#destroy"
 
+      # ActiveStorage direct-upload helper: exchange a blob reference for
+      # signed_id + URL after the browser PUT the bytes to storage
+      post "uploads/create_blob", to: "uploads#create_blob"
+
       # Resource endpoints
       resources :posts, only: [ :index, :show, :create, :update, :destroy ], param: :slug
       resources :categories, only: [ :index, :show, :create, :update, :destroy ], param: :slug
