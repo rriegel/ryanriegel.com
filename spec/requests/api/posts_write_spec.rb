@@ -104,6 +104,21 @@ RSpec.describe "API::Posts Write Operations", type: :request do
       expect(response).to have_http_status(:created)
       expect(Post.find_by!(slug: response.parsed_body["slug"]).cover_image).not_to be_attached
     end
+
+    # Covers the production/CDN branch of servable_blob_url (the dev branch
+    # is exercised by every request above that returns a cover_image).
+    it "uses ASSET_HOST for the cover image URL in production" do
+      controller = Api::V1::PostsController.new
+      allow(Rails.env).to receive(:production?).and_return(true)
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("ASSET_HOST").and_return("cdn.example.com")
+
+      url = controller.send(:servable_blob_url, cover_blob)
+
+      expect(url).to start_with("http://cdn.example.com/rails/active_storage/blobs/redirect/")
+      expect(url).to include(cover_blob.signed_id)
+      expect(url).to end_with("/cover.png")
+    end
   end
 
   describe "PATCH /api/v1/posts/:slug" do
