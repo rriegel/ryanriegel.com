@@ -9,6 +9,8 @@ export interface Post {
   status: string;
   published_at: string | null;
   cover_image: string | null;
+  cover_image_content_type?: string | null;
+  cover_image_byte_size?: number | null;
   category: { name: string; slug: string } | null;
   tags: { name: string; slug: string }[];
 }
@@ -97,6 +99,11 @@ export async function getAdminPosts(
 
 export async function getPosts(page: number = 1, perPage: number = 10): Promise<PostsResponse> {
   return fetchApi<PostsResponse>(`/api/v1/posts?page=${page}&per_page=${perPage}`);
+}
+
+// Feed consumer: opts into full sanitized HTML bodies (see posts_controller#index).
+export async function getFeedPosts(perPage: number = 20): Promise<PostsResponse> {
+  return fetchApi<PostsResponse>(`/api/v1/posts?page=1&per_page=${perPage}&include_body=true`);
 }
 
 export async function getPostsByCategory(categoryId: number, page: number = 1): Promise<PostsResponse> {

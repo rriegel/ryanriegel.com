@@ -9,7 +9,11 @@ class Api::V1::PostsController < ApplicationController
   def index
     # Admins can see all posts; public API only shows published
     posts = current_user ? Post.all : Post.published
-    posts = posts.includes(:category, :tags)
+    # Full-body list responses (RSS feed) are opt-in via include_body. Without
+    # it, list responses stay excerpt-only. Public feed requests are always
+    # published-only (no session cookie), so bodies never leak for drafts.
+    include_body = params[:include_body] == "true"
+    posts = posts.includes(:category, :tags, cover_image_attachment: :blob)
 
     # Filtering
     posts = posts.where(category_id: params[:category_id]) if params[:category_id].present?
@@ -40,7 +44,7 @@ class Api::V1::PostsController < ApplicationController
     posts = posts.offset(offset).limit(per_page)
 
     render json: {
-      data: posts.map { |post| post_json(post) },
+      data: posts.map { |post| post_json(post, full: include_body) },
       meta: {
         current_page: page,
         per_page: per_page,
@@ -169,6 +173,10 @@ class Api::V1::PostsController < ApplicationController
       # sees is localhost:3000 regardless of the browser. Absolute URL only for
       # a production CDN host (see uploads_controller#servable_blob_url).
       cover_image: post.cover_image.attached? ? servable_blob_url(post.cover_image) : nil,
+      # Raw blob metadata for RSS <enclosure> (which requires type + length) and
+      # any other media-aware consumers. ActiveStorage tracks both on the blob.
+      cover_image_content_type: post.cover_image.attached? ? post.cover_image.blob.content_type : nil,
+      cover_image_byte_size: post.cover_image.attached? ? post.cover_image.blob.byte_size : nil,
       category: post.category ? { name: post.category.name, slug: post.category.slug } : nil,
       tags: post.tags.map { |tag| { name: tag.name, slug: tag.slug } }
     }
