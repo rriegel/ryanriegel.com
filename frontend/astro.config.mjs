@@ -1,9 +1,11 @@
 import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
+import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
+  integrations: [react()],
   adapter: node({
     mode: 'standalone'
   }),
@@ -15,9 +17,11 @@ export default defineConfig({
     server: {
       allowedHosts: true,
       proxy: {
+        // No changeOrigin: Rails must see the browser's Host header so the
+        // URLs it generates (direct-upload PUT target, blob preview URLs)
+        // point back at the origin the browser is actually using.
         '/api': {
           target: 'http://localhost:3000',
-          changeOrigin: true,
           configure: (proxy) => {
             proxy.on('proxyRes', (proxyRes) => {
               console.log('[PROXY] Response from Rails, status:', proxyRes.statusCode);
@@ -37,9 +41,10 @@ export default defineConfig({
             });
           },
         },
+        // No changeOrigin here either — same Host-passthrough requirement
+        // for ActiveStorage direct uploads and blob serving.
         '/rails/active_storage': {
           target: 'http://localhost:3000',
-          changeOrigin: true,
         },
       },
     },

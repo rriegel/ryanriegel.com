@@ -193,7 +193,8 @@ const meta = postsData?.meta;
 </AdminLayout>
 
 <script>
-  const API_BASE = import.meta.env.API_URL || 'http://localhost:3000';
+  // Same-origin relative paths — requests ride the Astro proxy
+  // (see astro.config.mjs) from any browsing host.
 
   // Filter/sort changes → navigate with query params
   const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
@@ -244,7 +245,7 @@ const meta = postsData?.meta;
     confirmBtn.textContent = 'Deleting...';
 
     try {
-      const res = await fetch(`${API_BASE}/api/v1/posts/${deleteSlug}`, {
+      const res = await fetch(`/api/v1/posts/${deleteSlug}`, {
         method: 'DELETE',
         credentials: 'include',
       });

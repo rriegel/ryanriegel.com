@@ -6,15 +6,27 @@ const { slug } = Astro.params;
 
 let post: Post | null = null;
 let error: string | null = null;
+// Forward the admin auth cookie so a logged-in admin can preview drafts here.
+// Server-side fetches need the cookie explicitly; the browser's own credentials
+// don't apply to Astro's SSR fetch.
+const cookieHeader = Astro.request.headers.get('cookie') || '';
 
 try {
-  post = await getPost(slug as string);
+  post = await getPost(slug as string, cookieHeader || undefined);
 } catch (e) {
   error = e instanceof Error ? e.message : 'Failed to load post';
 }
+// Missing/generic failure → a real 404 status (drafts for anonymous users,
+// unknown slugs) instead of 200 + error markup, so crawlers see it too.
+if (!post) {
+  Astro.response.status = 404;
+}
 ---
 
-<Layout title={post ? `${post.title} - Ryan Riegel` : 'Post Not Found'}>
+<Layout
+  title={post ? `${post.title} - Ryan Riegel` : 'Post Not Found'}
+  description={post?.excerpt || undefined}
+>
   {error && (
     <div class="error">
       <h1>Post Not Found</h1>
@@ -32,6 +44,7 @@ try {
       )}
       <header>
         <h1>{post.title}</h1>
+        {post.status === 'draft' && <div class="draft-badge">Draft — visible only to you</div>}
         <div class="meta">
           {post.published_at && (
             <time datetime={post.published_at}>
@@ -48,6 +61,7 @@ try {
             </a>
           )}
         </div>
+        {post.excerpt && <p class="excerpt-lede">{post.excerpt}</p>}
         {post.tags.length > 0 && (
           <div class="tags">
             {post.tags.map((tag) => (
@@ -67,6 +81,17 @@ try {
 </Layout>
 
 <style>
+  .draft-badge {
+    display: inline-block;
+    background: #fff3cd;
+    color: #664d03;
+    border: 1px solid #ffe69c;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
   .post .cover {
     margin-bottom: 2rem;
     border-radius: 4px;
@@ -94,6 +119,13 @@ try {
     color: var(--color-text-muted);
     font-size: 0.875rem;
     margin-bottom: 0.75rem;
+  }
+
+  .excerpt-lede {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    margin: 0 0 0.75rem 0;
   }
 
   .category-link {
