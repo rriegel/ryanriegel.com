@@ -157,8 +157,6 @@ GEM
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     image_processing (2.2.0)
-    imagen (0.2.0)
-      parser (>= 2.5, != 2.5.1.1)
     io-console (0.9.4)
     irb (1.18.0)
       pp (>= 0.6.0)
@@ -218,7 +216,7 @@ GEM
     orm_adapter (0.5.0)
     ostruct (0.6.3)
     parallel (2.1.0)
-    parser (3.3.12.0)
+    parser (3.3.13.0)
       ast (~> 2.4.1)
       racc
     pg (1.7.0-x86_64-linux)
@@ -381,15 +379,15 @@ GEM
     tsort (0.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    undercover (0.8.5)
+    undercover (0.9.0)
       base64
       benchmark
-      bigdecimal
-      imagen (>= 0.2.0)
+      erubi (>= 1.13)
+      prism (>= 1.8, < 3)
       rainbow (>= 2.1, < 4.0)
       rugged (>= 0.27, < 1.10)
-      simplecov
-      simplecov_json_formatter
+      simplecov (>= 1.0)
+      simplecov_json_formatter (~> 0.1)
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.2.0)
